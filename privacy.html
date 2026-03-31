@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Professor Overlay Privacy Policy</title>
+    <meta name="description" content="Privacy Policy for the Professor Overlay Chrome extension.">
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f8fc;
+        --panel: rgba(255, 255, 255, 0.96);
+        --text: #182431;
+        --muted: #536273;
+        --border: #d8e2ee;
+        --accent: #0e6b5c;
+        --link: #145ea8;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(circle at top left, #e5f4f0 0, transparent 30%),
+          radial-gradient(circle at top right, #e7f0ff 0, transparent 35%),
+          var(--bg);
+        color: var(--text);
+        font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 20px 64px;
+      }
+
+      .card {
+        padding: 32px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        box-shadow: 0 18px 40px rgba(22, 45, 80, 0.08);
+      }
+
+      h1,
+      h2 {
+        line-height: 1.2;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+      }
+
+      h2 {
+        margin: 28px 0 12px;
+        font-size: 1.15rem;
+      }
+
+      p {
+        margin: 0 0 14px;
+      }
+
+      ul {
+        margin: 0;
+        padding-left: 22px;
+      }
+
+      li + li {
+        margin-top: 10px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: #e5f4f0;
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
+
+      .lead {
+        color: var(--muted);
+        max-width: 62ch;
+      }
+
+      .meta {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      a {
+        color: var(--link);
+      }
+
+      code {
+        padding: 0.1em 0.35em;
+        border-radius: 6px;
+        background: #eef3f8;
+        font-size: 0.95em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <div class="eyebrow">Professor Overlay</div>
+        <h1>Privacy Policy</h1>
+        <p class="lead">
+          This Privacy Policy describes what data Professor Overlay accesses, how it is used,
+          and what is shared when the extension is used on the University of Houston enrollment portal.
+        </p>
+        <p class="meta">Effective date: March 30, 2026</p>
+
+        <h2>What the extension accesses</h2>
+        <ul>
+          <li>The extension reads professor names and course codes from the currently open University of Houston enrollment pages at <code>https://saprd.my.uh.edu/*</code>.</li>
+          <li>The extension does not intentionally read unrelated tabs or unrelated websites.</li>
+        </ul>
+
+        <h2>What the extension sends off-device</h2>
+        <ul>
+          <li>Professor names are sent to <code>https://api.cougargrades.io/api/external/rmp/search</code> to look up RateMyProfessor data.</li>
+          <li>Professor names are sent to <code>https://api.cougargrades.io/api/instructor/{name}</code> to look up CougarGrades instructor data.</li>
+          <li>Course codes are used locally to construct CougarGrades course links such as <code>https://cougargrades.io/c/COSC%203380</code>.</li>
+        </ul>
+
+        <h2>What the extension stores</h2>
+        <ul>
+          <li>User configuration, such as selectors and display toggles, is stored using Chrome sync storage.</li>
+          <li>The extension does not intentionally store browsing history, authentication cookies, student IDs, schedules, or form submissions.</li>
+        </ul>
+
+        <h2>Data sharing</h2>
+        <ul>
+          <li>The extension does not sell user data.</li>
+          <li>The extension does not send analytics, advertising data, or developer telemetry.</li>
+          <li>The only network requests made by the extension are requests to the CougarGrades API that are needed to fetch professor-related metadata.</li>
+        </ul>
+
+        <h2>Security</h2>
+        <ul>
+          <li>The extension does not execute remote code.</li>
+          <li>External links are opened in a new tab using <code>noopener,noreferrer</code>.</li>
+          <li>The extension is scoped in its manifest to the University of Houston enrollment domain.</li>
+        </ul>
+
+        <h2>Contact</h2>
+        <p>
+          If you have questions about this Privacy Policy, update this section with your contact email
+          before publishing the extension publicly.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
