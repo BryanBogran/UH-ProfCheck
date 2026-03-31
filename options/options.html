@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Professor Overlay Options</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main class="page">
+      <h1>Professor Overlay</h1>
+      <p class="intro">
+        Configure which enrollment pages to enhance and how professor names are located in the DOM.
+      </p>
+
+      <form id="settings-form" class="card">
+        <label>
+          <span>University Name</span>
+          <input id="universityName" name="universityName" type="text" required>
+        </label>
+
+        <label>
+          <span>Enabled URL Patterns</span>
+          <textarea id="enabledUrlPatterns" name="enabledUrlPatterns" rows="4"></textarea>
+        </label>
+
+        <label>
+          <span>Course Row Selector</span>
+          <input id="courseRowSelector" name="courseRowSelector" type="text" required>
+        </label>
+
+        <label>
+          <span>Instructor Selector</span>
+          <input id="instructorSelector" name="instructorSelector" type="text" required>
+        </label>
+
+        <label>
+          <span>Course Code Selector</span>
+          <input id="courseCodeSelector" name="courseCodeSelector" type="text" required>
+        </label>
+
+        <details class="helper">
+          <summary>Find selectors on the enrollment page</summary>
+          <p>
+            Open the enrollment page, press <code>F12</code>, switch to the Console, and paste this helper:
+          </p>
+          <textarea id="probeScript" rows="16" readonly></textarea>
+          <button id="copyProbe" type="button">Copy Probe Script</button>
+        </details>
+
+        <label class="checkbox">
+          <input id="showRmp" name="showRmp" type="checkbox">
+          <span>Show RateMyProfessor chips</span>
+        </label>
+
+        <label class="checkbox">
+          <input id="showCougarGrades" name="showCougarGrades" type="checkbox">
+          <span>Show CougarGrades chips</span>
+        </label>
+
+        <button type="submit">Save Settings</button>
+        <p id="status" class="status" aria-live="polite"></p>
+      </form>
+    </main>
+
+    <script src="options.js"></script>
+  </body>
+</html>
