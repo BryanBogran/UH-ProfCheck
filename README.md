@@ -2,6 +2,9 @@
 
 This is a starter Chrome extension that injects professor data into a university enrollment page.
 
+UPDATE: This Extension is now on the chrome web store if you are interested in downloading through there the link is below.
+https://chromewebstore.google.com/detail/uh-profcheck/cgddcdnkcckjknijkaopgmhahbcdjjai?authuser=0&hl=en
+
 ## What it does
 
 - Watches the enrollment page for instructor names.
