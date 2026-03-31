@@ -1,119 +1,190 @@
-# Professor Overlay Extension
+# UH ProfCheck
 
-This is a starter Chrome extension that injects professor data into a university enrollment page.
+UH ProfCheck is a Manifest V3 browser extension for the University of Houston enrollment portal. It enhances the in-page registration experience by attaching professor and course context directly to AccessUH search results using CougarGrades and RateMyProfessor data.
 
-## What it does
+Version: `0.2.0`
 
-- Watches the enrollment page for instructor names.
-- Looks up RateMyProfessor data through CougarGrades' public API bridge at `/api/external/rmp/search`.
-- Looks up CougarGrades instructor statistics through `/api/instructor/{instructorName}`.
-- Renders small inline chips next to the instructor name with links back to both source sites.
+## Overview
 
-## Why this design
+UH ProfCheck runs on `https://saprd.my.uh.edu/*` and adds lightweight overlays next to instructor and course nodes on the registration page. Instead of forcing students to open multiple tabs for each section, it surfaces the most useful signals inline:
 
-Scraping raw HTML from third-party sites is brittle. This starter uses the current public API surface exposed by `https://api.cougargrades.io`, which is more stable than parsing website markup and also avoids hard-coding a private RateMyProfessor GraphQL flow into the content script.
+- RateMyProfessor rating links
+- CougarGrades GPA links
+- CougarGrades drop-rate links
+- Course-level CougarGrades links for detected course headers
+- Fallback course stats when the instructor is `TBA`, `Staff`, or `To Be Announced`
 
-## Architecture
+The extension is scoped to UH enrollment pages and fetches data through the CougarGrades API bridge.
+
+## Completed V2 Features
+
+- Refreshed V2 settings page with grouped controls and a cleaner layout
+- Browser-compatible storage access via `browser ?? chrome`
+- Toggleable RateMyProfessor overlays
+- Toggleable CougarGrades overlays
+- Default scoring mode selector with:
+  `Best Overall`, `Easiest A`, and `Lowest Risk`
+- Full-page optional dark mode for the AccessUH enrollment UI
+- Smarter in-page rescanning with mutation observation plus delayed rescans after load
+- Improved overlay layout that stacks cleanly around professor names instead of breaking row clicks
+- Dedicated CougarGrades course links for detected course header nodes
+- Placeholder instructor support for `TBA`, `Staff`, and `To Be Announced`
+- Placeholder fallback chips that show course GPA and course drop rate when instructor data is unavailable
+- Legacy overlay cleanup so older chip formats do not accumulate after rerenders
+- Background-side request caching for professor lookups and course lookups
+- Settings actions to clear cached API data
+- Settings action to clear local planner-related data
+- Selector helper script for discovering likely instructor nodes from the live UH page
+- Support, feedback, and rate pages for extension users
+- Firefox-specific MV3 manifest for testing and packaging outside Chromium
+
+## Current Data Sources
+
+- CougarGrades instructor lookup:
+  `https://api.cougargrades.io/api/instructor/{name}`
+- CougarGrades course lookup:
+  `https://api.cougargrades.io/api/course/{courseCode}`
+- CougarGrades RateMyProfessor bridge:
+  `https://api.cougargrades.io/api/external/rmp/search`
+
+## What The Extension Shows
+
+For instructor rows with matched data, UH ProfCheck can render:
+
+- A scoring chip based on the selected default mode
+- `Rating X.X` from RateMyProfessor
+- `GPA X.X` from CougarGrades
+- `Drop Rate X.X%` from CougarGrades
+
+For rows without an assigned instructor, UH ProfCheck can render:
+
+- `Instructor TBA`
+- `Course GPA X.X`
+- `Course Drop Rate X.X%`
+
+For top-level course headers, UH ProfCheck can also render:
+
+- `Course stats for SUBJECT ####`
+
+## Project Structure
 
 - `manifest.json`
-  Registers the content script, background worker, and options page.
+  Chromium manifest for Chrome and Brave.
+- `manifest.firefox.json`
+  Firefox MV3 manifest with the alternate background declaration Firefox expects.
 - `src/content.js`
-  Runs on pages that match your configured URL patterns, finds professor names, and injects overlay chips.
+  Detects course and instructor nodes, injects overlays, handles placeholder rows, and applies optional dark mode.
 - `src/background.js`
-  Performs cross-origin fetches to CougarGrades and normalizes the combined response.
+  Handles cross-origin API requests, normalizes CougarGrades and RateMyProfessor responses, and caches lookup results.
+- `src/content.css`
+  Styles the overlay system and AccessUH dark mode.
 - `options/options.html`
-  Lets you configure your enrollment URL pattern and the CSS selectors used to find course rows and instructor names.
+  V2 settings UI.
+- `options/options.js`
+  Saves config, restores defaults, copies the selector probe, clears local planner data, and clears lookup cache.
+- `pages/support.html`
+  Support/contact page.
+- `pages/feedback.html`
+  Feedback page.
+- `pages/rate.html`
+  Browser-store review page.
+- `PRIVACY.md`
+  Markdown privacy policy.
+- `privacy.html`
+  Hosted/privacy-page version of the policy.
 
-## Load it in Chrome
+## Installation
+
+### Chrome or Brave
 
 1. Open `chrome://extensions`.
 2. Enable Developer Mode.
 3. Click `Load unpacked`.
 4. Select this project folder.
-5. Open the extension options and set:
-   - your enrollment page URL pattern
-   - the selector for each course row
-   - the selector for the professor name inside that row
 
-## Release notes
+### Firefox
 
-For peer sharing or Chrome Web Store submission, the extension is now restricted in the manifest to:
+Firefox still expects a different MV3 background declaration than Chromium, so use the Firefox manifest in a separate build folder.
 
-```text
-https://saprd.my.uh.edu/*
-```
+1. Copy `manifest.firefox.json` over `manifest.json` in a Firefox-only build folder.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click `Load Temporary Add-on`.
+4. Select that build folder’s `manifest.json`.
 
-That is much easier to justify than injecting on every site.
+## Default Configuration
 
-There is also a starter privacy policy in `PRIVACY.md`. If you publish to the Chrome Web Store, host that policy at a public URL and link it from the store listing if the listing flow requires it.
+The shipped defaults are aimed at UH:
 
-If the enrollment page is behind login, use the helper in the options page to discover the selectors from your own browser session.
+- University name:
+  `University of Houston`
+- Enabled URL pattern:
+  `https://saprd.my.uh.edu/*`
+- Course row selector:
+  `[data-course-row], tr, .course-row, .class-row`
+- Instructor selector:
+  `span[id*='SSR_INSTR_LONG'], [data-instructor], .instructor, .professor, .faculty-name`
+- Course code selector:
+  `span[id*='SSS_SUBJ_CATLG'], [data-course-code], .course-code, .subject-catalog`
 
-## Important next step
+## Settings
 
-The only part we cannot infer automatically is your enrollment page DOM. You will need to inspect the page and replace the placeholder selectors with the real ones from your university site.
+The V2 settings page includes these user-facing controls:
 
-For example, if your enrollment results table looks like this:
+- Show RateMyProfessor data
+- Show CougarGrades data
+- Enable planner tray overlay
+- Show confidence warnings
+- Use dark mode for the full AccessUH enrollment page
+- Choose the default scoring mode
 
-```html
-<tr class="class-row">
-  <td class="faculty-name">John Smith</td>
-</tr>
-```
+Note: the planner/confidence controls are present in settings and stored in config, but the checked-in `0.2.0` implementation is still primarily centered on overlays, lookups, theming, support pages, and cache/data-management actions.
 
-Then these settings would work:
+## Selector Helper
 
-```text
-Course Row Selector: tr.class-row
-Instructor Selector: .faculty-name
-```
+The settings page includes a probe script you can paste into DevTools Console while viewing the live enrollment portal. It finds likely instructor-name nodes and prints candidate selectors with row context. This is useful when UH changes markup or when adapting the extension to a similar page layout.
 
-## For the UH enrollment portal
+## Privacy Summary
 
-The `saprd.my.uh.edu` enrollment pages are likely behind an authenticated PeopleSoft session, so I could not inspect the live DOM remotely. The starter extension now includes a selector probe in the options page that you can copy into DevTools Console while viewing the real class page.
+- The extension only runs on `https://saprd.my.uh.edu/*`
+- It reads professor names and course codes from the current UH enrollment page
+- It stores user configuration in sync storage
+- It can clear local planner-related data from local storage
+- It does not include analytics or developer telemetry
+- Its external network requests are limited to CougarGrades API endpoints
 
-Based on the professor element you found, a strong UH instructor selector is:
+See [PRIVACY.md](/Users/chase/code/chrome-extension/PRIVACY.md) for the full markdown policy and [privacy.html](/Users/chase/code/chrome-extension/privacy.html) for the hosted-page version.
 
-```text
-span[id*="SSR_INSTR_LONG"]
-```
+## Changelog
 
-That selector matches elements such as:
+### `0.2.0` - V2 release
 
-```html
-<span class="ps_box-value psc_display-block psc_padding-bottom0_5em" id="SSR_CLSRCH_F_WK_SSR_INSTR_LONG_1$86$$0">Carlos Ordonez</span>
-```
+- Repositioned the project from a starter overlay into a UH-specific extension
+- Updated the extension name and manifest description to `UH ProfCheck`
+- Restricted content-script matching to `https://saprd.my.uh.edu/*`
+- Added a Firefox-specific manifest for cross-browser testing
+- Rebuilt the options page into a fuller V2 settings experience
+- Added default scoring mode settings for `Best Overall`, `Easiest A`, and `Lowest Risk`
+- Added full-page AccessUH dark mode support
+- Added support, feedback, and rate pages
+- Added settings actions for clearing local planner data and API cache
+- Added background message handling for `LOOKUP_COURSE` and `CLEAR_CACHE`
+- Added CougarGrades course lookup support in the background worker
+- Expanded CougarGrades normalization to include GPA, drop rate, instructor/course counts, seasonal metadata, and recent sections
+- Added placeholder instructor handling for `TBA`, `Staff`, and `To Be Announced`
+- Added course-stat fallback chips for unassigned instructors
+- Reworked overlay rendering to support stacked layouts and safer click handling inside PeopleSoft rows
+- Added cleanup logic for legacy chip formats after rerenders
+- Added delayed rescans and mutation-based rescans to survive dynamic page updates
+- Added support for optional full-page dark overlay styling in `content.css`
+- Added browser-agnostic extension API access using `globalThis.browser ?? globalThis.chrome`
 
-Based on the course element you found, a strong UH course selector is:
+### `0.1.0`
 
-```text
-span[id*="SSS_SUBJ_CATLG"]
-```
+- Initial overlay implementation
+- Basic RateMyProfessor lookup support
+- Basic CougarGrades instructor lookup support
+- Starter options page for selectors and URL patterns
 
-For example:
+## Known Scope
 
-```html
-<span class="ps_box-value" id="SSR_CRSE_INFO_V_SSS_SUBJ_CATLG">COSC 3380</span>
-```
-
-When a course code is available, the extension now renders:
-
-- `CG Prof` linking to the CougarGrades instructor page
-- `CG COSC 3380` next to the course title/header, linking to the CougarGrades course page
-- CougarGrades instructor badges for GPA and W rate only
-
-What to send back:
-
-1. The top 5-10 rows from the `console.table(...)` output.
-2. If possible, the HTML for one row that contains the professor name.
-
-Once we have that, we can lock in the exact `courseRowSelector` and `instructorSelector` for UH instead of relying on generic fallbacks.
-
-## Likely improvements
-
-- Better name matching for multiple instructors in one row.
-- A popup for quick on/off toggles.
-- Per-site selector profiles instead of one global profile.
-- Smarter duplicate handling when the enrollment page re-renders.
-- Optional course-level overlays in addition to instructor-level overlays.
-# UH-ProfCheck
+This README documents shipped behavior in the current codebase. Some V2 wording in the manifest and settings refers to planner, compare, shortlist, and confidence concepts, but those flows are not yet fully represented in the checked-in runtime code.

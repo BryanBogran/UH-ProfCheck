@@ -3,63 +3,132 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Professor Overlay Options</title>
+    <title>UH ProfCheck Settings</title>
     <link rel="stylesheet" href="options.css">
   </head>
   <body>
     <main class="page">
-      <h1>Professor Overlay</h1>
-      <p class="intro">
-        Configure which enrollment pages to enhance and how professor names are located in the DOM.
-      </p>
+      <section class="hero">
+        <p class="eyebrow">v2</p>
+        <h1>UH ProfCheck</h1>
+        <p class="intro">
+         Compare course sections in-page, without opening extra tabs.
+        </p>
+      </section>
 
       <form id="settings-form" class="card">
-        <label>
-          <span>University Name</span>
-          <input id="universityName" name="universityName" type="text" required>
-        </label>
+        <section class="settings-group">
+          <div class="settings-group__header">
+            <h2>Basic</h2>
+            <p>Everyday controls for the overlay and planner tray.</p>
+          </div>
 
-        <label>
-          <span>Enabled URL Patterns</span>
-          <textarea id="enabledUrlPatterns" name="enabledUrlPatterns" rows="4"></textarea>
-        </label>
+          <label class="checkbox">
+            <input id="showRmp" name="showRmp" type="checkbox">
+            <span>Show RateMyProfessor data</span>
+          </label>
 
-        <label>
-          <span>Course Row Selector</span>
-          <input id="courseRowSelector" name="courseRowSelector" type="text" required>
-        </label>
+          <label class="checkbox">
+            <input id="showCougarGrades" name="showCougarGrades" type="checkbox">
+            <span>Show CougarGrades data</span>
+          </label>
 
-        <label>
-          <span>Instructor Selector</span>
-          <input id="instructorSelector" name="instructorSelector" type="text" required>
-        </label>
+          <label class="checkbox">
+            <input id="enablePlannerTray" name="enablePlannerTray" type="checkbox">
+            <span>Enable planner tray overlay</span>
+          </label>
 
-        <label>
-          <span>Course Code Selector</span>
-          <input id="courseCodeSelector" name="courseCodeSelector" type="text" required>
-        </label>
+          <label class="checkbox">
+            <input id="showConfidence" name="showConfidence" type="checkbox">
+            <span>Show confidence warnings</span>
+          </label>
 
-        <details class="helper">
-          <summary>Find selectors on the enrollment page</summary>
-          <p>
-            Open the enrollment page, press <code>F12</code>, switch to the Console, and paste this helper:
-          </p>
-          <textarea id="probeScript" rows="16" readonly></textarea>
-          <button id="copyProbe" type="button">Copy Probe Script</button>
+          <label class="checkbox">
+            <input id="enableDarkMode" name="enableDarkMode" type="checkbox">
+            <span>Use dark mode for the full AccessUH enrollment page</span>
+          </label>
+
+          <label>
+            <span>Default scoring mode</span>
+            <select id="defaultScoringMode" name="defaultScoringMode">
+              <option value="balanced">Best Overall</option>
+              <option value="easiestA">Easiest A</option>
+              <option value="lowestRisk">Lowest Risk</option>
+            </select>
+          </label>
+        </section>
+
+        <details class="settings-group settings-group--advanced">
+          <summary>Advanced</summary>
+
+          <label>
+            <span>University Name</span>
+            <input id="universityName" name="universityName" type="text">
+          </label>
+
+          <label>
+            <span>Enabled URL Patterns</span>
+            <textarea id="enabledUrlPatterns" name="enabledUrlPatterns" rows="3"></textarea>
+          </label>
+
+          <label>
+            <span>Course Row Selector</span>
+            <input id="courseRowSelector" name="courseRowSelector" type="text">
+          </label>
+
+          <label>
+            <span>Instructor Selector</span>
+            <input id="instructorSelector" name="instructorSelector" type="text">
+          </label>
+
+          <label>
+            <span>Course Code Selector</span>
+            <input id="courseCodeSelector" name="courseCodeSelector" type="text">
+          </label>
+
+          <div class="utility-row">
+            <button id="clearLocalData" type="button" class="button button--secondary">Clear Planner Data</button>
+            <button id="clearCache" type="button" class="button button--secondary">Clear API Cache</button>
+          </div>
+
+          <details class="helper">
+            <summary>Selector helper</summary>
+            <p>
+              Open the UH enrollment page, open DevTools Console, and paste this helper to inspect likely instructor nodes.
+            </p>
+            <textarea id="probeScript" rows="16" readonly></textarea>
+            <button id="copyProbe" type="button" class="button button--secondary">Copy Probe Script</button>
+          </details>
         </details>
 
-        <label class="checkbox">
-          <input id="showRmp" name="showRmp" type="checkbox">
-          <span>Show RateMyProfessor chips</span>
-        </label>
+        <section class="settings-group settings-group--links">
+          <div class="settings-group__header">
+            <h2>More</h2>
+            <p>Shortcuts for support, feedback, and store reviews.</p>
+          </div>
 
-        <label class="checkbox">
-          <input id="showCougarGrades" name="showCougarGrades" type="checkbox">
-          <span>Show CougarGrades chips</span>
-        </label>
+          <div class="link-grid">
+            <a class="link-card" href="../pages/support.html" target="_blank" rel="noreferrer">
+              <strong>Support</strong>
+              <span>Open help links and a contact card.</span>
+            </a>
 
-        <button type="submit">Save Settings</button>
-        <p id="status" class="status" aria-live="polite"></p>
+            <a class="link-card" href="../pages/feedback.html" target="_blank" rel="noreferrer">
+              <strong>Feedback</strong>
+              <span>Send ideas, bugs, and requests by email.</span>
+            </a>
+
+            <a class="link-card" href="../pages/rate.html" target="_blank" rel="noreferrer">
+              <strong>Rate</strong>
+              <span>Open the review page for the current browser.</span>
+            </a>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button type="submit" class="button">Save Settings</button>
+          <p id="status" class="status" aria-live="polite"></p>
+        </div>
       </form>
     </main>
 

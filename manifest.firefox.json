@@ -15,8 +15,20 @@
   "host_permissions": [
     "https://api.cougargrades.io/*"
   ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "flamezbb1@gmail.com",
+      "data_collection_permissions": {
+        "required": [
+          "websiteContent"
+        ]
+      }
+    }
+  },
   "background": {
-    "service_worker": "src/background.js"
+    "scripts": [
+      "src/background.js"
+    ]
   },
   "options_page": "options/options.html",
   "content_scripts": [

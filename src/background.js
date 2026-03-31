@@ -8,51 +8,59 @@ const DEFAULT_CONFIG = {
   courseCodeSelector: "span[id*='SSS_SUBJ_CATLG'], [data-course-code], .course-code, .subject-catalog",
   showRmp: true,
   showCougarGrades: true,
+  enablePlannerTray: true,
+  showConfidence: true,
+  defaultScoringMode: "balanced",
   rmpStrictSearch: true,
   cougarGradesBaseUrl: "https://cougargrades.io",
   cougarGradesApiBaseUrl: "https://api.cougargrades.io",
-  rmpProfessorBaseUrl: "https://www.ratemyprofessors.com/professor",
-  metrics: ["gpa", "droprate"]
+  rmpProfessorBaseUrl: "https://www.ratemyprofessors.com/professor"
 };
 
+const extensionApi = globalThis.browser ?? globalThis.chrome;
 const LOOKUP_CACHE = new Map();
-const ALLOWED_METRICS = new Set(["gpa", "droprate"]);
 
-chrome.runtime.onInstalled.addListener(async () => {
-  const stored = await chrome.storage.sync.get(Object.keys(DEFAULT_CONFIG));
-  if (!stored.universityName) {
-    await chrome.storage.sync.set(DEFAULT_CONFIG);
-  }
+extensionApi.runtime.onInstalled.addListener(async () => {
+  const stored = await extensionApi.storage.sync.get(Object.keys(DEFAULT_CONFIG));
+  const merged = { ...DEFAULT_CONFIG, ...stored };
+  await extensionApi.storage.sync.set(merged);
 });
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type !== "LOOKUP_PROFESSOR") {
+extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const handlers = {
+    LOOKUP_PROFESSOR: () => handleProfessorLookup(message.payload),
+    LOOKUP_COURSE: () => handleCourseLookup(message.payload),
+    CLEAR_CACHE: async () => {
+      LOOKUP_CACHE.clear();
+      return { cleared: true };
+    }
+  };
+
+  const handler = handlers[message?.type];
+  if (!handler) {
     return false;
   }
 
-  handleLookup(message.payload)
+  handler()
     .then((result) => sendResponse({ ok: true, result }))
     .catch((error) => {
-      console.error("Professor lookup failed", error);
+      console.error(`Background handler failed for ${message?.type}`, error);
       sendResponse({ ok: false, error: error.message });
     });
 
   return true;
 });
 
-async function handleLookup(payload) {
-  const config = {
-    ...DEFAULT_CONFIG,
-    ...(await chrome.storage.sync.get(Object.keys(DEFAULT_CONFIG)))
-  };
-  config.metrics = (config.metrics || DEFAULT_CONFIG.metrics).filter((metric) => ALLOWED_METRICS.has(metric));
+async function handleProfessorLookup(payload) {
+  const config = await loadConfig();
+  const normalizedName = normalizeName(payload?.professorName);
 
-  const normalizedName = normalizeName(payload.professorName);
   if (!normalizedName) {
     return null;
   }
 
   const cacheKey = JSON.stringify({
+    type: "professor",
     professorName: normalizedName,
     universityName: config.universityName,
     showRmp: config.showRmp,
@@ -64,31 +72,52 @@ async function handleLookup(payload) {
   }
 
   const lastFirstName = toLastFirst(normalizedName);
+  const normalizedCourseCode = normalizeCourseCode(payload?.courseCode);
 
   const [rmp, cougarGrades] = await Promise.all([
     config.showRmp ? fetchRmp(normalizedName, config) : Promise.resolve(null),
-    config.showCougarGrades ? fetchCougarGrades(lastFirstName, config) : Promise.resolve(null)
+    config.showCougarGrades ? fetchCougarGradesInstructor(lastFirstName, config) : Promise.resolve(null)
   ]);
-
-  const normalizedCourseCode = normalizeCourseCode(payload.courseCode);
 
   const result = {
     name: normalizedName,
     lastFirstName,
     courseCode: normalizedCourseCode,
     rmp,
-    cougarGrades: cougarGrades
-      ? {
-          ...cougarGrades,
-          courseLink: normalizedCourseCode
-            ? `${config.cougarGradesBaseUrl}/c/${encodeURIComponent(normalizedCourseCode)}`
-            : null
-        }
-      : null
+    cougarGrades
   };
 
   LOOKUP_CACHE.set(cacheKey, result);
   return result;
+}
+
+async function handleCourseLookup(payload) {
+  const config = await loadConfig();
+  const courseCode = normalizeCourseCode(payload?.courseCode);
+
+  if (!courseCode || !config.showCougarGrades) {
+    return null;
+  }
+
+  const cacheKey = JSON.stringify({
+    type: "course",
+    courseCode
+  });
+
+  if (LOOKUP_CACHE.has(cacheKey)) {
+    return LOOKUP_CACHE.get(cacheKey);
+  }
+
+  const result = await fetchCougarGradesCourse(courseCode, config);
+  LOOKUP_CACHE.set(cacheKey, result);
+  return result;
+}
+
+async function loadConfig() {
+  return {
+    ...DEFAULT_CONFIG,
+    ...(await extensionApi.storage.sync.get(Object.keys(DEFAULT_CONFIG)))
+  };
 }
 
 async function fetchRmp(name, config) {
@@ -125,22 +154,17 @@ async function fetchRmp(name, config) {
   };
 }
 
-async function fetchCougarGrades(lastFirstName, config) {
+async function fetchCougarGradesInstructor(lastFirstName, config) {
   const url = new URL(`/api/instructor/${encodeURIComponent(lastFirstName)}`, config.cougarGradesApiBaseUrl);
   const response = await fetch(url.toString());
   if (!response.ok) {
-    throw new Error(`CougarGrades lookup failed with ${response.status}`);
+    throw new Error(`CougarGrades instructor lookup failed with ${response.status}`);
   }
 
   const payload = await response.json();
-  if (!payload || !payload.meta) {
+  if (!payload?.meta) {
     return null;
   }
-
-  const metricLookup = new Map((payload.badges || []).map((badge) => [badge.key, badge]));
-  const selectedBadges = (config.metrics || [])
-    .map((metricKey) => metricLookup.get(metricKey))
-    .filter(Boolean);
 
   return {
     source: "cougargrades",
@@ -149,8 +173,71 @@ async function fetchCougarGrades(lastFirstName, config) {
     department: payload.meta.descriptionDepartmentsInvolved,
     firstTaught: payload.firstTaught,
     lastTaught: payload.lastTaught,
-    badges: selectedBadges,
+    gpa: findBadgeValue(payload.badges, "gpa"),
+    dropRate: findBadgeValue(payload.badges, "droprate"),
+    sectionCount: payload.sectionCount ?? null,
+    courseCount: payload.courseCount ?? null,
+    topCourses: (payload.topCourses || []).slice(0, 4).map((course) => ({
+      courseName: course.courseName,
+      totalEnrolled: course.totalEnrolled
+    })),
+    badges: (payload.badges || []).map((badge) => ({
+      key: badge.key,
+      text: badge.text,
+      caption: badge.caption
+    })),
     link: `${config.cougarGradesBaseUrl}/i/${encodeURIComponent(payload.meta.fullNameLastNameFirst || lastFirstName)}`
+  };
+}
+
+async function fetchCougarGradesCourse(courseCode, config) {
+  const url = new URL(`/api/course/${encodeURIComponent(courseCode)}`, config.cougarGradesApiBaseUrl);
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`CougarGrades course lookup failed with ${response.status}`);
+  }
+
+  const payload = await response.json();
+  if (!payload?.meta?._id) {
+    return null;
+  }
+
+  const rows = Array.isArray(payload.dataGrid?.rows) ? payload.dataGrid.rows : [];
+
+  return {
+    source: "cougargrades-course",
+    courseCode: payload.meta._id,
+    title: payload.meta.longDescription || payload.meta.description || payload.meta._id,
+    department: payload.meta.department,
+    catalogNumber: payload.meta.catalogNumber,
+    firstTaught: payload.firstTaught,
+    lastTaught: payload.lastTaught,
+    gpa: findBadgeValue(payload.badges, "gpa"),
+    dropRate: findBadgeValue(payload.badges, "droprate"),
+    classSize: payload.classSize ?? null,
+    sectionCount: payload.sectionCount ?? rows.length,
+    instructorCount: payload.instructorCount ?? null,
+    seasonalAvailability: toSeasonNames(payload.seasonalAvailability?.ratioSorted),
+    topInstructors: (payload.relatedInstructors || []).slice(0, 4).map((instructor) => ({
+      name: instructor.title,
+      gpa: findBadgeValue(instructor.badges, "gpa"),
+      dropRate: findBadgeValue(instructor.badges, "droprate"),
+      caption: instructor.caption
+    })),
+    recentSections: rows
+      .slice()
+      .sort((left, right) => (right.term || 0) - (left.term || 0))
+      .slice(0, 24)
+      .map((row) => ({
+        term: row.term,
+        termString: row.termString,
+        sectionNumber: row.sectionNumber != null ? String(row.sectionNumber) : "",
+        primaryInstructorName: row.primaryInstructorName || "",
+        semesterGPA: numberOrNull(row.semesterGPA),
+        totalEnrolled: numberOrNull(row.totalEnrolled),
+        dropRate: calculateDropRate(row)
+      })),
+    link: `${config.cougarGradesBaseUrl}/c/${encodeURIComponent(payload.meta._id)}`
   };
 }
 
@@ -169,11 +256,7 @@ function normalizeCourseCode(input) {
     .toUpperCase();
 
   const match = text.match(/\b([A-Z]{2,5}\s?\d{4})\b/);
-  if (!match) {
-    return "";
-  }
-
-  return match[1].replace(/\s+/, " ");
+  return match ? match[1].replace(/\s+/, " ") : "";
 }
 
 function toLastFirst(name) {
@@ -192,4 +275,41 @@ function toLastFirst(name) {
 
   const lastName = parts.pop();
   return `${lastName}, ${parts.join(" ")}`;
+}
+
+function findBadgeValue(badges, key) {
+  const badge = (badges || []).find((item) => item.key === key);
+  if (!badge?.text) {
+    return null;
+  }
+
+  const match = String(badge.text).match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : null;
+}
+
+function numberOrNull(value) {
+  return Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+function calculateDropRate(row) {
+  const grades = ["A", "B", "C", "D", "F", "W", "S", "NCR"];
+  const totals = grades.reduce((sum, key) => sum + (Number(row?.[key]) || 0), 0);
+  if (!totals) {
+    return null;
+  }
+
+  return ((Number(row?.W) || 0) / totals) * 100;
+}
+
+function toSeasonNames(ratioSorted) {
+  const seasonMap = {
+    "01": "Spring",
+    "02": "Summer",
+    "03": "Fall"
+  };
+
+  return Object.entries(ratioSorted || {})
+    .sort((left, right) => right[1] - left[1])
+    .map(([key]) => seasonMap[key])
+    .filter(Boolean);
 }

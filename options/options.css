@@ -1,33 +1,80 @@
 body {
   margin: 0;
-  background: linear-gradient(180deg, #fffaf2 0%, #f4f8ff 100%);
-  color: #1d2630;
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  background: #f7f4ef;
+  color: #1f1f1f;
+  font: 14px/1.5 Arial, Helvetica, sans-serif;
 }
 
 .page {
-  max-width: 760px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 28px 18px 40px;
+}
+
+.hero {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid #b9b9b9;
+  background: #fff;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #c8102e;
+  font: 700 11px/1.2 Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
 }
 
 h1 {
-  margin: 0 0 8px;
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
 }
 
 .intro {
-  margin: 0 0 24px;
-  color: #4f5d6b;
+  max-width: 720px;
+  margin: 8px 0 0;
+  color: #4f4f4f;
 }
 
 .card {
   display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #b9b9b9;
+  background: #fff;
+}
+
+.settings-group {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #c9c9c9;
+  background: #fff;
+}
+
+.settings-group__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.settings-group__header p {
+  margin: 4px 0 0;
+  color: #5c5c5c;
+}
+
+.settings-group--links {
   gap: 16px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #d8e2f0;
-  border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(25, 50, 90, 0.08);
+}
+
+.settings-group--advanced summary,
+.helper summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #9b5f2e;
 }
 
 label {
@@ -37,16 +84,21 @@ label {
 
 input,
 textarea,
+select,
 button {
   font: inherit;
 }
 
 input,
-textarea {
+textarea,
+select {
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #becddd;
-  border-radius: 10px;
+  border: 1px solid #a8a8a8;
+  border-radius: 2px;
   background: #fff;
+  color: #1f1f1f;
 }
 
 textarea {
@@ -56,37 +108,99 @@ textarea {
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.helper {
-  padding: 14px 16px;
-  border: 1px solid #d8e2f0;
-  border-radius: 12px;
-  background: #f8fbff;
-}
-
-.helper p {
-  margin: 10px 0;
+  gap: 12px;
 }
 
 .checkbox input {
+  width: auto;
   margin: 0;
 }
 
-button {
+.helper {
+  display: grid;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid #d4d4d4;
+  background: #fbfbfb;
+}
+
+.helper p {
+  margin: 0;
+  color: #5c5c5c;
+}
+
+.utility-row,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.link-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #c9c9c9;
+  background: #fbfbfb;
+  color: inherit;
+  text-decoration: none;
+}
+
+.link-card strong {
+  font-size: 1rem;
+}
+
+.link-card span {
+  color: #5c5c5c;
+}
+
+.link-card:hover {
+  border-color: #c8102e;
+  background: #fff5f7;
+}
+
+.button {
   width: fit-content;
   padding: 10px 16px;
-  border: 0;
-  border-radius: 10px;
-  background: #0e6b5c;
+  border: 1px solid #99192f;
+  border-radius: 2px;
+  background: #c8102e;
   color: #fff;
   font-weight: 700;
   cursor: pointer;
 }
 
+.button--secondary {
+  background: #fff;
+  color: #0b6fb8;
+  border: 1px solid #a8a8a8;
+}
+
 .status {
   min-height: 1.5em;
   margin: 0;
-  color: #0e6b5c;
+  color: #c8102e;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 20px 12px 32px;
+  }
+
+  .card,
+  .settings-group {
+    padding: 14px;
+  }
+
+  .link-grid {
+    grid-template-columns: 1fr;
+  }
 }

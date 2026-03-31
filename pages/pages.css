@@ -1,0 +1,170 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, #2d3138 0, #1f2328 42%, #16191d 100%);
+  color: #f4f1ea;
+  font: 15px/1.5 Arial, Helvetica, sans-serif;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 18px 44px;
+}
+
+.hero {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #d6b58e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 2.2rem;
+  line-height: 1.05;
+}
+
+.hero p,
+.section-intro,
+.note,
+.meta {
+  color: #c9c3b8;
+}
+
+.panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 14, 18, 0.74);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+}
+
+.section-intro {
+  max-width: 680px;
+}
+
+.action-row,
+.card-grid,
+.contact-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.action-row {
+  grid-template-columns: repeat(auto-fit, minmax(210px, max-content));
+}
+
+.card-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.contact-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.action,
+.card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
+  text-decoration: none;
+}
+
+.action {
+  align-items: center;
+}
+
+.action:hover,
+.card:hover {
+  border-color: #f04134;
+  background: rgba(240, 65, 52, 0.12);
+}
+
+.action--primary {
+  background: #20242b;
+}
+
+.action--rate {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: #20242b;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.action--disabled,
+.action[aria-disabled="true"] {
+  cursor: default;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.star {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  background: #d91e18;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 93%, 50% 72%, 21% 93%, 32% 57%, 2% 35%, 39% 35%);
+}
+
+.card strong,
+.action strong {
+  font-size: 1rem;
+}
+
+.card span,
+.action span {
+  color: #c9c3b8;
+}
+
+.contact {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(240, 65, 52, 0.28);
+  background: rgba(240, 65, 52, 0.08);
+}
+
+.contact a {
+  color: #fff0c7;
+}
+
+.meta {
+  font-size: 0.92rem;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 24px 14px 32px;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+  }
+
+  .panel {
+    padding: 16px;
+  }
+}
