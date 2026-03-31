@@ -7,14 +7,15 @@
     <meta name="description" content="Privacy Policy for the Professor Overlay Chrome extension.">
     <style>
       :root {
-        color-scheme: light;
-        --bg: #f5f8fc;
-        --panel: rgba(255, 255, 255, 0.96);
-        --text: #182431;
-        --muted: #536273;
-        --border: #d8e2ee;
-        --accent: #0e6b5c;
-        --link: #145ea8;
+        color-scheme: dark;
+        --bg: #081019;
+        --panel: rgba(13, 22, 34, 0.92);
+        --text: #edf3fb;
+        --muted: #a8b8ca;
+        --border: rgba(144, 179, 214, 0.18);
+        --accent: #ff5c73;
+        --accent2: #5fc7ff;
+        --link: #8fd6ff;
       }
 
       * {
@@ -24,8 +25,9 @@
       body {
         margin: 0;
         background:
-          radial-gradient(circle at top left, #e5f4f0 0, transparent 30%),
-          radial-gradient(circle at top right, #e7f0ff 0, transparent 35%),
+          radial-gradient(circle at top left, rgba(255, 92, 115, 0.18) 0, transparent 28%),
+          radial-gradient(circle at top right, rgba(95, 199, 255, 0.16) 0, transparent 32%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 22%),
           var(--bg);
         color: var(--text);
         font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -34,7 +36,7 @@
       main {
         max-width: 860px;
         margin: 0 auto;
-        padding: 48px 20px 64px;
+        padding: 56px 20px 72px;
       }
 
       .card {
@@ -42,7 +44,8 @@
         background: var(--panel);
         border: 1px solid var(--border);
         border-radius: 20px;
-        box-shadow: 0 18px 40px rgba(22, 45, 80, 0.08);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+        backdrop-filter: blur(10px);
       }
 
       h1,
@@ -53,11 +56,25 @@
       h1 {
         margin: 0 0 12px;
         font-size: clamp(2rem, 4vw, 2.8rem);
+        letter-spacing: -0.03em;
       }
 
       h2 {
         margin: 28px 0 12px;
         font-size: 1.15rem;
+        position: relative;
+        padding-top: 8px;
+      }
+
+      h2::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 56px;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
       }
 
       p {
@@ -78,8 +95,8 @@
         margin-bottom: 10px;
         padding: 5px 10px;
         border-radius: 999px;
-        background: #e5f4f0;
-        color: var(--accent);
+        background: rgba(255, 92, 115, 0.12);
+        color: #ff91a1;
         font-size: 0.82rem;
         font-weight: 700;
         letter-spacing: 0.02em;
@@ -99,13 +116,25 @@
 
       a {
         color: var(--link);
+        text-decoration-color: rgba(143, 214, 255, 0.45);
       }
 
       code {
         padding: 0.1em 0.35em;
         border-radius: 6px;
-        background: #eef3f8;
+        background: rgba(255, 255, 255, 0.08);
         font-size: 0.95em;
+      }
+
+      @media (max-width: 640px) {
+        main {
+          padding: 28px 14px 42px;
+        }
+
+        .card {
+          padding: 22px 18px;
+          border-radius: 16px;
+        }
       }
     </style>
   </head>
@@ -155,7 +184,8 @@
 
         <h2>Contact</h2>
         <p>
-          If you have questions about this Privacy Policy, contact me at flamezbb1@gmail.com
+          If you have questions about this Privacy Policy, contact:
+          <a href="mailto:flamezbb1@gmail.com">flamezbb1@gmail.com</a>
         </p>
       </section>
     </main>
