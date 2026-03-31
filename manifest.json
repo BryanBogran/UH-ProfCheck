@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Professor Overlay",
+  "name": "UH ProfCheck",
   "version": "0.1.0",
-  "description": "Overlay RateMyProfessor and CougarGrades data onto a university enrollment page.",
+  "description": "Adds an Overlay of RateMyProfessors and CougarGrades scores on the University of Houston enrollment page.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
