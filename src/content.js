@@ -105,9 +105,24 @@
   }
 
   function renderOverlay(anchorNode, result, pageConfig) {
-    if (anchorNode.parentElement?.querySelector(":scope > .prof-overlay")) {
+    const instructorCell = anchorNode.closest("td, .ps_grid-cell, .ps_box-group") || anchorNode.parentElement;
+    if (!instructorCell) {
       return;
     }
+
+    const existingHost =
+      anchorNode.nextElementSibling?.classList?.contains("prof-overlay-host")
+        ? anchorNode.nextElementSibling
+        : null;
+
+    const staleHosts = [...instructorCell.querySelectorAll(".prof-overlay-host")].filter((host) => host !== existingHost);
+    staleHosts.forEach((host) => host.remove());
+
+    if (existingHost) {
+      return;
+    }
+
+    anchorNode.classList.add("prof-instructor-name");
 
     const overlay = document.createElement("span");
     overlay.className = "prof-overlay";
@@ -149,7 +164,11 @@
       return;
     }
 
-    anchorNode.insertAdjacentElement("afterend", overlay);
+    const host = document.createElement("div");
+    host.className = "prof-overlay-host";
+    host.appendChild(overlay);
+
+    anchorNode.insertAdjacentElement("afterend", host);
   }
 
   function renderCourseOverlay(anchorNode, courseCode) {
@@ -168,7 +187,11 @@
       })
     );
 
-    anchorNode.insertAdjacentElement("afterend", overlay);
+    const host = document.createElement("div");
+    host.className = "prof-overlay-host";
+    host.appendChild(overlay);
+
+    anchorNode.insertAdjacentElement("afterend", host);
   }
 
   function createChip({ label, title, href, modifier }) {
