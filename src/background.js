@@ -255,7 +255,7 @@ function normalizeCourseCode(input) {
     .trim()
     .toUpperCase();
 
-  const match = text.match(/\b([A-Z]{2,5}\s?\d{4})\b/);
+  const match = text.match(/\b([A-Z]{2,5}\s*\d{3,4})\b/);
   return match ? match[1].replace(/\s+/, " ") : "";
 }
 

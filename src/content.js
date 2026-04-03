@@ -42,6 +42,8 @@
   const renderedCourseNodes = new WeakSet();
   const pendingLookups = new Map();
   const pendingCourseLookups = new Map();
+  const bestProfessorNameByCourse = new Map();
+  const shownNonLabByCourse = new Map();
 
   applyPageTheme();
   scanPage();
@@ -90,6 +92,59 @@
     document.querySelectorAll(config.instructorSelector).forEach((node) => {
       processInstructorNode(node);
     });
+
+    // Hide lab overlays for lecture+lab combinations
+    const overlayGroups = new Map();
+    document.querySelectorAll('.prof-overlay[data-professor-course]').forEach((overlay) => {
+      const key = overlay.dataset.professorCourse;
+      if (!overlayGroups.has(key)) {
+        overlayGroups.set(key, []);
+      }
+      overlayGroups.get(key).push(overlay);
+    });
+
+    overlayGroups.forEach((overlays) => {
+      const labOverlays = [];
+      const nonLabOverlays = [];
+
+      overlays.forEach((overlay) => {
+        const row = overlay.closest(config.courseRowSelector);
+        if (!row) {
+          nonLabOverlays.push(overlay);
+          return;
+        }
+
+        const courseCodeElement = row.querySelector(config.courseCodeSelector);
+        let isLab = false;
+
+        if (courseCodeElement) {
+          const courseText = normalizeWhitespace(courseCodeElement.textContent || "").toUpperCase();
+          if (courseText.includes('LAB') || courseText.includes(' L ')) {
+            isLab = true;
+          }
+        }
+
+        if (!isLab) {
+          const rowText = normalizeWhitespace(row.textContent || "").toLowerCase();
+          if (/\blab\b|\blaboratory\b|\bpract\b|\bpractice\b/.test(rowText)) {
+            isLab = true;
+          }
+        }
+
+        if (isLab) {
+          labOverlays.push(overlay);
+        } else {
+          nonLabOverlays.push(overlay);
+        }
+      });
+
+      // If we have >=1 non-lab overlay for this professor+course, hide all lab overlays.
+      if (nonLabOverlays.length > 0) {
+        labOverlays.forEach((overlay) => {
+          overlay.style.display = 'none';
+        });
+      }
+    });
   }
 
   function processCourseNode(node) {
@@ -111,7 +166,7 @@
       return;
     }
 
-    const isPlaceholder = isPlaceholderInstructor(node?.textContent || "");
+    const isPlaceholder = isExactPlaceholderInstructor(node?.textContent || "");
     const professorName = isPlaceholder ? "" : extractProfessorName(node);
     const courseCode = extractCourseCode(node);
     const row = node.closest(config.courseRowSelector);
@@ -157,7 +212,8 @@
           result: null,
           courseResult: response.result,
           courseCode,
-          isPlaceholder: true
+          isPlaceholder: true,
+          professorName: ""
         });
       } catch (error) {
         console.error("Unable to render placeholder instructor overlay", error);
@@ -183,18 +239,70 @@
         return;
       }
 
+      const normalizedCourseCode = courseCode || response.result.courseCode || "";
+      const candidateScore = computeProfessorScore(response.result, config.defaultScoringMode);
+      let isBest = false;
+
+      if (normalizedCourseCode && candidateScore != null) {
+        const currentBest = bestProfessorNameByCourse.get(normalizedCourseCode);
+        if (!currentBest || candidateScore > currentBest.score) {
+          bestProfessorNameByCourse.set(normalizedCourseCode, {
+            name: professorName,
+            score: candidateScore
+          });
+          isBest = true;
+        } else if (currentBest.name === professorName) {
+          isBest = true;
+        }
+      }
+
       renderOverlay(node, {
         result: response.result,
         courseResult: null,
-        courseCode: courseCode || response.result.courseCode || "",
-        isPlaceholder: false
+        courseCode: normalizedCourseCode,
+        isPlaceholder: false,
+        isBest,
+        professorName
       });
     } catch (error) {
       console.error("Unable to render professor overlay", error);
     }
   }
 
-  function renderOverlay(anchorNode, { result, courseResult, courseCode, isPlaceholder }) {
+  function computeProfessorScore(result, mode) {
+    if (!result) {
+      return null;
+    }
+
+    const rawRating = Number(result.rmp?.avgRating);
+    const rawGpa = Number(result.cougarGrades?.gpa);
+    const rawDrop = Number(result.cougarGrades?.dropRate);
+
+    const rmpScore = Number.isFinite(rawRating) ? rawRating / 5 : null;
+    const gpaScore = Number.isFinite(rawGpa) ? rawGpa / 4 : null;
+    const dropScore = Number.isFinite(rawDrop) ? 1 - rawDrop / 100 : null;
+
+    switch (mode) {
+      case "easiestA":
+        return gpaScore != null ? gpaScore : rmpScore;
+      case "lowestRisk":
+        return dropScore != null ? dropScore : gpaScore != null ? gpaScore : rmpScore;
+      case "balanced":
+      default:
+        if (gpaScore != null && rmpScore != null) {
+          return (gpaScore + rmpScore + (dropScore != null ? dropScore : 0.5)) / (dropScore != null ? 3 : 2);
+        }
+        if (gpaScore != null) {
+          return gpaScore;
+        }
+        if (rmpScore != null) {
+          return rmpScore;
+        }
+        return dropScore;
+    }
+  }
+
+  function renderOverlay(anchorNode, { result, courseResult, courseCode, isPlaceholder, isBest = false, professorName }) {
     if (!anchorNode?.isConnected || (!result && !courseResult)) {
       return;
     }
@@ -205,14 +313,10 @@
     const overlay = existingOverlay || document.createElement("div");
     overlay.className = "prof-overlay";
     overlay.dataset.overlayType = isPlaceholder ? "placeholder" : "professor";
-    overlay.classList.toggle("prof-overlay--stacked", shouldStackOverlay);
-    anchorNode.classList.toggle("prof-overlay-text-anchor", shouldStackOverlay);
-    if (config.enableDarkMode) {
-      overlay.classList.add("prof-overlay--dark");
-    }
+    overlay.dataset.professorCourse = `${courseCode}::${professorName}`;
     overlay.replaceChildren();
 
-    if (result) {
+    if (result && isBest) {
       overlay.appendChild(
         createChip({
           label: SCORING_MODES[config.defaultScoringMode].label,
@@ -467,12 +571,15 @@
   }
 
   function findPlaceholderInstructorNode(row) {
-    const candidates = [...row.querySelectorAll("td, span, div")]
+    const instructorCandidates = [...row.querySelectorAll(config.instructorSelector)]
       .filter((node) => isUsableInstructorNode(node))
-      .filter((node) => isExactPlaceholderInstructor(node?.textContent || ""))
-      .sort((left, right) => normalizeWhitespace(left.textContent).length - normalizeWhitespace(right.textContent).length);
+      .filter((node) => isExactPlaceholderInstructor(node?.textContent || ""));
 
-    return candidates[0] || null;
+    if (instructorCandidates.length) {
+      return instructorCandidates[0];
+    }
+
+    return null;
   }
 
   function isExactPlaceholderInstructor(text) {
@@ -519,7 +626,7 @@
     const scopedMatch = row?.querySelector(config.courseCodeSelector);
     const directMatch = scopedMatch || document.querySelector(config.courseCodeSelector);
     const text = normalizeWhitespace(directMatch?.textContent || "").toUpperCase();
-    const match = text.match(/\b([A-Z]{2,5}\s?\d{4})\b/);
+    const match = text.match(/\b([A-Z]{2,5}\s*\d{3,4})\b/);
     return match ? match[1].replace(/\s+/, " ") : "";
   }
 
@@ -529,6 +636,22 @@
 
   function isEnabledForCurrentPage(patterns) {
     return (patterns || []).some((pattern) => wildcardToRegExp(pattern).test(window.location.href));
+  }
+
+  function isLabRow(node) {
+    const row = node.closest(config.courseRowSelector);
+    if (!row) {
+      return false;
+    }
+    const courseCodeElement = row.querySelector(config.courseCodeSelector);
+    if (courseCodeElement) {
+      const courseText = normalizeWhitespace(courseCodeElement.textContent || "").toUpperCase();
+      if (courseText.includes('LAB') || courseText.includes(' L ')) {
+        return true;
+      }
+    }
+    const rowText = normalizeWhitespace(row.textContent || "").toLowerCase();
+    return /\blab\b|\blaboratory\b|\bpract\b|\bpractice\b/.test(rowText);
   }
 
   function wildcardToRegExp(pattern) {
