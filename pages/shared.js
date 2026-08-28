@@ -4,39 +4,51 @@ const RATE_LINKS = {
   firefox: ""
 };
 
+const PAGE_INITIALIZERS = {
+  support: initSupportPage,
+  feedback: initFeedbackPage,
+  rate: initRatePage
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  PAGE_INITIALIZERS[document.body.dataset.page]?.();
+});
+
+function initSupportPage() {
+  setLink("support-email-link", supportEmailUrl("UH ProfCheck support"));
+  setText("support-email-text", SUPPORT_EMAIL);
+}
+
+function initFeedbackPage() {
+  setLink("feedback-email-link", supportEmailUrl("UH ProfCheck feedback"));
+}
+
+function initRatePage() {
+  const rateUrl = RATE_LINKS[detectBrowser()];
+
+  setLink("rate-link", rateUrl);
+  setLink("rate-email-link", supportEmailUrl("UH ProfCheck review"));
+  setText("rate-note", rateUrl
+    ? "The button above opens the review page for the current browser."
+    : "There is no store listing for this browser yet, so send a note instead.");
+
+  if (!rateUrl) {
+    setText("rate-label", "Rating unavailable");
+  }
+}
+
 function detectBrowser() {
-  const ua = navigator.userAgent;
-
-  if (/Firefox\//.test(ua)) {
-    return "firefox";
-  }
-
-  if (/Brave\//.test(ua) || /Edg\//.test(ua) || /Chrome\//.test(ua)) {
-    return "chromium";
-  }
-
-  return "chromium";
+  return /Firefox\//.test(navigator.userAgent) ? "firefox" : "chromium";
 }
 
-function getSupportEmailUrl(subject) {
-  const url = new URL(`mailto:${SUPPORT_EMAIL}`);
-  if (subject) {
-    url.searchParams.set("subject", subject);
-  }
-  return url.toString();
+/** RFC 6068 wants %20 in a mailto subject; URLSearchParams would write "+". */
+function supportEmailUrl(subject) {
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
 }
 
-function getRateLink() {
-  const browser = detectBrowser();
-  return RATE_LINKS[browser] || "";
-}
-
-function setLink(nodeId, url, fallbackLabel) {
+/** Without a destination the anchor becomes an inert, non-focusable label. */
+function setLink(nodeId, url) {
   const node = document.getElementById(nodeId);
-  if (!node) {
-    return;
-  }
-
   if (url) {
     node.href = url;
     return;
@@ -45,41 +57,8 @@ function setLink(nodeId, url, fallbackLabel) {
   node.removeAttribute("href");
   node.setAttribute("aria-disabled", "true");
   node.classList.add("action--disabled");
-  if (fallbackLabel) {
-    node.textContent = fallbackLabel;
-  }
 }
 
 function setText(nodeId, value) {
-  const node = document.getElementById(nodeId);
-  if (node) {
-    node.textContent = value;
-  }
+  document.getElementById(nodeId).textContent = value;
 }
-
-function initPage() {
-  const page = document.body?.dataset?.page;
-
-  if (page === "support") {
-    const supportUrl = getSupportEmailUrl("UH ProfCheck support");
-    setLink("support-email-link", supportUrl);
-    setText("support-email-text", SUPPORT_EMAIL);
-    return;
-  }
-
-  if (page === "feedback") {
-    setLink("feedback-email-link", getSupportEmailUrl("UH ProfCheck feedback"));
-    return;
-  }
-
-  if (page === "rate") {
-    const rateUrl = getRateLink();
-    setLink("rate-link", rateUrl, "Rate page not configured");
-    setLink("rate-email-link", getSupportEmailUrl("UH ProfCheck review"));
-    if (rateUrl) {
-      setText("rate-note", "The button above opens the review page for the current browser.");
-    }
-  }
-}
-
-document.addEventListener("DOMContentLoaded", initPage);

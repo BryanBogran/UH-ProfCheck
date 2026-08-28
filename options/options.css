@@ -1,8 +1,10 @@
+/* Shares the palette in pages/pages.css so the extension reads as one product. */
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f7f4ef;
-  color: #1f1f1f;
+  background: radial-gradient(circle at top left, #2d3138 0, #1f2328 42%, #16191d 100%);
+  color: #f4f1ea;
+  color-scheme: dark;
   font: 14px/1.5 Arial, Helvetica, sans-serif;
 }
 
@@ -13,16 +15,17 @@ body {
 }
 
 .hero {
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  border: 1px solid #b9b9b9;
-  background: #fff;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
 .eyebrow {
-  margin: 0 0 8px;
-  color: #c8102e;
-  font: 700 11px/1.2 Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: #d6b58e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
@@ -30,51 +33,41 @@ h1 {
   margin: 0;
   font-size: 2rem;
   line-height: 1.1;
-  font-weight: 700;
 }
 
 .intro {
   max-width: 720px;
-  margin: 8px 0 0;
-  color: #4f4f4f;
+  margin: 0;
+  color: #c9c3b8;
 }
 
-.card {
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid #b9b9b9;
-  background: #fff;
-}
-
+.card,
 .settings-group {
   display: grid;
   gap: 14px;
-  padding: 16px;
-  border: 1px solid #c9c9c9;
-  background: #fff;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 14, 18, 0.74);
+}
+
+.card {
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
 }
 
 .settings-group__header h2 {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 700;
 }
 
 .settings-group__header p {
   margin: 4px 0 0;
-  color: #5c5c5c;
+  color: #c9c3b8;
 }
 
-.settings-group--links {
-  gap: 16px;
-}
-
-.settings-group--advanced summary,
-.helper summary {
+.settings-group--advanced summary {
   cursor: pointer;
+  color: #d6b58e;
   font-weight: 700;
-  color: #9b5f2e;
 }
 
 label {
@@ -83,26 +76,20 @@ label {
 }
 
 input,
-textarea,
 select,
 button {
   font: inherit;
 }
 
 input,
-textarea,
 select {
   width: 100%;
   box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #a8a8a8;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 2px;
-  background: #fff;
-  color: #1f1f1f;
-}
-
-textarea {
-  resize: vertical;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
 }
 
 .checkbox {
@@ -114,19 +101,7 @@ textarea {
 .checkbox input {
   width: auto;
   margin: 0;
-}
-
-.helper {
-  display: grid;
-  gap: 10px;
-  padding: 14px 16px;
-  border: 1px solid #d4d4d4;
-  background: #fbfbfb;
-}
-
-.helper p {
-  margin: 0;
-  color: #5c5c5c;
+  accent-color: #f04134;
 }
 
 .utility-row,
@@ -139,17 +114,17 @@ textarea {
 
 .link-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 12px;
 }
 
 .link-card {
   display: grid;
   gap: 6px;
-  padding: 14px;
-  border: 1px solid #c9c9c9;
-  background: #fbfbfb;
-  color: inherit;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
   text-decoration: none;
 }
 
@@ -158,35 +133,40 @@ textarea {
 }
 
 .link-card span {
-  color: #5c5c5c;
+  color: #c9c3b8;
 }
 
 .link-card:hover {
-  border-color: #c8102e;
-  background: #fff5f7;
+  border-color: #f04134;
+  background: rgba(240, 65, 52, 0.12);
 }
 
 .button {
   width: fit-content;
   padding: 10px 16px;
-  border: 1px solid #99192f;
+  border: 1px solid #f04134;
   border-radius: 2px;
-  background: #c8102e;
-  color: #fff;
+  background: #f04134;
+  color: #16191d;
   font-weight: 700;
   cursor: pointer;
 }
 
 .button--secondary {
-  background: #fff;
-  color: #0b6fb8;
-  border: 1px solid #a8a8a8;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
+}
+
+:focus-visible {
+  outline: 2px solid #f04134;
+  outline-offset: 2px;
 }
 
 .status {
   min-height: 1.5em;
   margin: 0;
-  color: #c8102e;
+  color: #ffb3ad;
   font-weight: 700;
 }
 

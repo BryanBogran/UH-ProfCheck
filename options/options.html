@@ -12,7 +12,7 @@
         <p class="eyebrow">v2</p>
         <h1>UH ProfCheck</h1>
         <p class="intro">
-         Compare course sections in-page, without opening extra tabs.
+          Compare course sections in-page, without opening extra tabs.
         </p>
       </section>
 
@@ -20,7 +20,7 @@
         <section class="settings-group">
           <div class="settings-group__header">
             <h2>Basic</h2>
-            <p>Everyday controls for the overlay and planner tray.</p>
+            <p>Everyday controls for the section overlay.</p>
           </div>
 
           <label class="checkbox">
@@ -31,21 +31,6 @@
           <label class="checkbox">
             <input id="showCougarGrades" name="showCougarGrades" type="checkbox">
             <span>Show CougarGrades data</span>
-          </label>
-
-          <label class="checkbox">
-            <input id="enablePlannerTray" name="enablePlannerTray" type="checkbox">
-            <span>Enable planner tray overlay</span>
-          </label>
-
-          <label class="checkbox">
-            <input id="showConfidence" name="showConfidence" type="checkbox">
-            <span>Show confidence warnings</span>
-          </label>
-
-          <label class="checkbox">
-            <input id="enableDarkMode" name="enableDarkMode" type="checkbox">
-            <span>Use dark mode for the full AccessUH enrollment page</span>
           </label>
 
           <label>
@@ -67,11 +52,6 @@
           </label>
 
           <label>
-            <span>Enabled URL Patterns</span>
-            <textarea id="enabledUrlPatterns" name="enabledUrlPatterns" rows="3"></textarea>
-          </label>
-
-          <label>
             <span>Course Row Selector</span>
             <input id="courseRowSelector" name="courseRowSelector" type="text">
           </label>
@@ -87,18 +67,8 @@
           </label>
 
           <div class="utility-row">
-            <button id="clearLocalData" type="button" class="button button--secondary">Clear Planner Data</button>
             <button id="clearCache" type="button" class="button button--secondary">Clear API Cache</button>
           </div>
-
-          <details class="helper">
-            <summary>Selector helper</summary>
-            <p>
-              Open the UH enrollment page, open DevTools Console, and paste this helper to inspect likely instructor nodes.
-            </p>
-            <textarea id="probeScript" rows="16" readonly></textarea>
-            <button id="copyProbe" type="button" class="button button--secondary">Copy Probe Script</button>
-          </details>
         </details>
 
         <section class="settings-group settings-group--links">
@@ -132,6 +102,7 @@
       </form>
     </main>
 
+    <script src="../src/config.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

@@ -1,0 +1,113 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../src/content.css">
+<style>
+  body { font: 14px Arial, sans-serif; margin: 20px; background: #fff; }
+  table { border-collapse: collapse; width: 1200px; }
+  th, td { border: 1px solid #ccc; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f4f6f8; }
+  /* PeopleSoft pins sub-entry heights so columns line up across lecture/lab. */
+  .ps-sub { height: 96px; overflow: hidden; line-height: 1.45; }
+  h2 { font: 700 15px Arial; margin: 24px 0 8px; }
+</style></head>
+<body>
+<h2>Option 1 — lecture + lab, same instructor (the overlap case)</h2>
+<table><thead><tr><th>Option</th><th>Class</th><th>Days and Times</th><th>Instructor</th><th>Seats</th></tr></thead>
+<tbody>
+<tr class="prof-overlay-best-row">
+  <td>1</td>
+  <td><div class="ps-sub">Lecture - 19187</div><div class="ps-sub">Laboratory - 19188</div></td>
+  <td><div class="ps-sub">Tuesday Thursday<br>10:00AM to 11:30AM</div><div class="ps-sub">Tuesday Thursday<br>8:30AM to 10:00AM</div></td>
+  <td>
+    <div class="ps-sub prof-overlay-unclamped" style="min-height:96px">
+      <span id="SSR_INSTR_LONG$span$0"><span id="SSR_INSTR_LONG$0">Melahat Almus</span></span>
+      <span class="prof-overlay-host"><div class="prof-overlay">
+        <a class="prof-overlay__chip prof-overlay__chip--best" href="#">Best Overall</a>
+        <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 4.3</a>
+        <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.6</a>
+        <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 9.6%</a>
+      </div></span>
+    </div>
+    <div class="ps-sub prof-overlay-unclamped" style="min-height:96px">
+      <span>Melahat Almus</span>
+      <span class="prof-overlay-host"><div class="prof-overlay">
+        <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 4.3</a>
+        <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.6</a>
+        <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 9.6%</a>
+      </div></span>
+    </div>
+  </td>
+  <td><div class="ps-sub">Open Seats 10 of 260</div><div class="ps-sub">Open Seats 1 of 50</div></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><div class="ps-sub">Lecture - 11360</div></td>
+  <td><div class="ps-sub">Mon Wed Fri<br>10:00AM to 11:00AM</div></td>
+  <td><div class="ps-sub prof-overlay-unclamped" style="min-height:96px">
+    <span>Blerina Xhabli</span>
+    <span class="prof-overlay-host"><div class="prof-overlay">
+      <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 4.4</a>
+      <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.4</a>
+      <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 11.2%</a>
+    </div></span>
+  </div></td>
+  <td><div class="ps-sub">Open Seats 6 of 270</div></td>
+</tr>
+</tbody></table>
+
+<h2>Shared badge — two instructors too close to separate (MATH 3321)</h2>
+<table><thead><tr><th>Option</th><th>Class</th><th>Instructor</th><th>Seats</th></tr></thead><tbody>
+<tr class="prof-overlay-best-row"><td>1</td><td>Lecture - 11574</td>
+  <td><span>Carlos Ordonez</span><span class="prof-overlay-host"><div class="prof-overlay">
+    <a class="prof-overlay__chip prof-overlay__chip--best-tied" href="#">Top Pick</a>
+    <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 3.0</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 3.1</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 14.1%</a>
+    <span class="prof-overlay__chip prof-overlay__chip--seats">4 seats left</span>
+  </div></span></td><td>Open Seats 4 of 75</td></tr>
+<tr><td>2</td><td>Lecture - 17184</td>
+  <td><span>Uma Ramamurthy</span><span class="prof-overlay-host"><div class="prof-overlay">
+    <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 2.7</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.6</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 6.2%</a>
+  </div></span></td><td>Open Seats 20 of 75</td></tr>
+<tr class="prof-overlay-best-row"><td>4</td><td>Lecture - 13665</td>
+  <td><span>Victoria Hilford</span><span class="prof-overlay-host"><div class="prof-overlay">
+    <a class="prof-overlay__chip prof-overlay__chip--best-tied" href="#">Top Pick</a>
+    <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 2.1</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 3.1</a>
+    <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 5.2%</a>
+  </div></span></td><td>Waitlist 34 of 40</td></tr>
+</tbody></table>
+
+<h2>Control — same markup with the un-clamp class removed (shows the bug)</h2>
+<table><tbody>
+<tr><td>1</td>
+  <td style="width:420px"><div class="ps-sub">
+    <span>Melahat Almus</span>
+    <span class="prof-overlay-host"><div class="prof-overlay">
+      <a class="prof-overlay__chip prof-overlay__chip--best" href="#">Best Overall</a>
+      <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 4.3</a>
+      <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.6</a>
+      <a class="prof-overlay__chip prof-overlay__chip--cg-gold" href="#">Drop Rate 9.6%</a>
+    </div></span></div>
+    <div class="ps-sub"><span>Melahat Almus</span>
+    <span class="prof-overlay-host"><div class="prof-overlay">
+      <a class="prof-overlay__chip prof-overlay__chip--rmp" href="#">Rating 4.3</a>
+      <a class="prof-overlay__chip prof-overlay__chip--cg" href="#">GPA 2.6</a>
+    </div></span></div>
+  </td></tr>
+</tbody></table>
+
+<div class="profcheck-launcher">
+  <div class="profcheck-panel">
+    <div class="profcheck-panel__header"><strong>Rank sections by</strong><button class="profcheck-panel__collapse">&times;</button></div>
+    <div class="profcheck-panel__modes">
+      <button class="profcheck-panel__mode profcheck-panel__mode--active">Best Overall</button>
+      <button class="profcheck-panel__mode">Easiest A</button>
+      <button class="profcheck-panel__mode">Lowest Risk</button>
+    </div>
+  </div>
+  <button class="profcheck-launcher__toggle"><img src="../../icons/icon-32.png" alt=""></button>
+</div>
+</body></html>

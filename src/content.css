@@ -1,312 +1,273 @@
-:root {
-  --prof-accessuh-red: #c8102e;
-  --prof-accessuh-red-deep: #a30f28;
-  --prof-accessuh-red-soft: #fff1f3;
-  --prof-accessuh-red-border: #e2a9b4;
-  --prof-accessuh-red-soft-strong: #fde7ec;
-  --prof-accessuh-paper: #ffffff;
-  --prof-accessuh-bg-dark: #11141b;
-  --prof-accessuh-surface-dark: #181d27;
-  --prof-accessuh-surface-dark-alt: #202634;
-  --prof-accessuh-surface-dark-soft: #262d3d;
-  --prof-accessuh-paper-dark: #1a1d24;
-  --prof-accessuh-paper-dark-soft: #222734;
-  --prof-accessuh-paper-dark-strong: #2b3141;
-  --prof-accessuh-text-dark: #f5f7fb;
-  --prof-accessuh-text-dark-muted: #c8d0df;
-  --prof-accessuh-border-dark: #4a556d;
-  --prof-accessuh-accent-dark: #ff758b;
-  --prof-accessuh-warn-dark: #4b3c17;
-  --prof-accessuh-warn-border-dark: #b99848;
+/* Scoped to our own elements so the host page's custom properties stay untouched. */
+.prof-overlay,
+.prof-overlay-host,
+.prof-overlay-best-row {
+  --prof-red: #c8102e;
+  --prof-red-deep: #a30f28;
+  --prof-red-soft: #fff1f3;
+  --prof-red-soft-strong: #fde7ec;
+  --prof-red-border: #e2a9b4;
+  --prof-paper: #ffffff;
 }
 
-html.prof-accessuh-dark,
-html.prof-accessuh-dark body,
-body.prof-accessuh-dark {
-  background: var(--prof-accessuh-bg-dark) !important;
-  color: var(--prof-accessuh-text-dark) !important;
-  color-scheme: dark;
+/*
+ * Block, not inline: an inline host cannot push apart PeopleSoft's height-pinned
+ * lecture/lab sub-rows, so its chips paint over the entry below.
+ */
+.prof-overlay-host {
+  display: block;
+  margin: 4px 0 2px;
+  line-height: normal;
 }
 
-html.prof-accessuh-dark a,
-body.prof-accessuh-dark a {
-  color: #ff9eb0 !important;
-}
-
-html.prof-accessuh-dark body,
-html.prof-accessuh-dark .ps_box-group,
-html.prof-accessuh-dark .ps_header_panel,
-html.prof-accessuh-dark .ps_pagecontainer,
-html.prof-accessuh-dark .ps_page-navbar,
-html.prof-accessuh-dark .ps_apps_page,
-html.prof-accessuh-dark .psc_wrapper,
-html.prof-accessuh-dark .psc_row,
-html.prof-accessuh-dark .psc_column,
-body.prof-accessuh-dark .ps_box-group,
-body.prof-accessuh-dark .ps_header_panel,
-body.prof-accessuh-dark .ps_pagecontainer,
-body.prof-accessuh-dark .ps_page-navbar,
-body.prof-accessuh-dark .ps_apps_page,
-body.prof-accessuh-dark .psc_wrapper,
-body.prof-accessuh-dark .psc_row,
-body.prof-accessuh-dark .psc_column {
-  background: var(--prof-accessuh-surface-dark) !important;
-  color: var(--prof-accessuh-text-dark) !important;
-  border-color: var(--prof-accessuh-border-dark) !important;
-}
-
-html.prof-accessuh-dark .ps_header_panel a,
-html.prof-accessuh-dark .ps_page-navbar a,
-html.prof-accessuh-dark .ps_header_panel span,
-html.prof-accessuh-dark .ps_page-navbar span,
-body.prof-accessuh-dark .ps_header_panel a,
-body.prof-accessuh-dark .ps_page-navbar a,
-body.prof-accessuh-dark .ps_header_panel span,
-body.prof-accessuh-dark .ps_page-navbar span {
-  color: #f7f8fb !important;
-}
-
-html.prof-accessuh-dark table,
-html.prof-accessuh-dark tbody,
-html.prof-accessuh-dark thead,
-html.prof-accessuh-dark tr,
-body.prof-accessuh-dark table,
-body.prof-accessuh-dark tbody,
-body.prof-accessuh-dark thead,
-body.prof-accessuh-dark tr {
-  background: transparent !important;
-  color: var(--prof-accessuh-text-dark) !important;
-}
-
-html.prof-accessuh-dark td,
-html.prof-accessuh-dark th,
-html.prof-accessuh-dark .ps_box-value,
-html.prof-accessuh-dark .ps_grid-cell,
-html.prof-accessuh-dark .PSLEVEL1GRIDNBO,
-html.prof-accessuh-dark .PSLEVEL2GRIDNBO,
-html.prof-accessuh-dark .PSGROUPBOXLABEL,
-html.prof-accessuh-dark .PSSRCHRESULTSODDROW,
-html.prof-accessuh-dark .PSSRCHRESULTSEVENROW,
-body.prof-accessuh-dark td,
-body.prof-accessuh-dark th,
-body.prof-accessuh-dark .ps_box-value,
-body.prof-accessuh-dark .ps_grid-cell,
-body.prof-accessuh-dark .PSLEVEL1GRIDNBO,
-body.prof-accessuh-dark .PSLEVEL2GRIDNBO,
-body.prof-accessuh-dark .PSGROUPBOXLABEL,
-body.prof-accessuh-dark .PSSRCHRESULTSODDROW,
-body.prof-accessuh-dark .PSSRCHRESULTSEVENROW {
-  background: transparent !important;
-  color: var(--prof-accessuh-text-dark) !important;
-  border-color: var(--prof-accessuh-border-dark) !important;
-}
-
-html.prof-accessuh-dark tr:nth-child(odd),
-html.prof-accessuh-dark .ps_grid-row:nth-child(odd),
-body.prof-accessuh-dark tr:nth-child(odd),
-body.prof-accessuh-dark .ps_grid-row:nth-child(odd) {
-  background: var(--prof-accessuh-surface-dark) !important;
-}
-
-html.prof-accessuh-dark tr:nth-child(even),
-html.prof-accessuh-dark .ps_grid-row:nth-child(even),
-body.prof-accessuh-dark tr:nth-child(even),
-body.prof-accessuh-dark .ps_grid-row:nth-child(even) {
-  background: var(--prof-accessuh-surface-dark-alt) !important;
-}
-
-html.prof-accessuh-dark input,
-html.prof-accessuh-dark select,
-html.prof-accessuh-dark textarea,
-html.prof-accessuh-dark button,
-html.prof-accessuh-dark [role="button"],
-html.prof-accessuh-dark .ps-button,
-html.prof-accessuh-dark .psc_button,
-body.prof-accessuh-dark input,
-body.prof-accessuh-dark select,
-body.prof-accessuh-dark textarea,
-body.prof-accessuh-dark button,
-body.prof-accessuh-dark [role="button"],
-body.prof-accessuh-dark .ps-button,
-body.prof-accessuh-dark .psc_button {
-  background: var(--prof-accessuh-surface-dark-soft) !important;
-  color: var(--prof-accessuh-text-dark) !important;
-  border-color: var(--prof-accessuh-border-dark) !important;
-}
-
-html.prof-accessuh-dark td,
-html.prof-accessuh-dark th,
-html.prof-accessuh-dark .ps_box-value,
-html.prof-accessuh-dark .ps_grid-cell,
-html.prof-accessuh-dark .ps_box-group,
-html.prof-accessuh-dark .psc_column,
-body.prof-accessuh-dark td,
-body.prof-accessuh-dark th,
-body.prof-accessuh-dark .ps_box-value,
-body.prof-accessuh-dark .ps_grid-cell,
-body.prof-accessuh-dark .ps_box-group,
-body.prof-accessuh-dark .psc_column {
-  color: var(--prof-accessuh-text-dark) !important;
-}
-
-html.prof-accessuh-dark .ps_text,
-html.prof-accessuh-dark .ps-label,
-html.prof-accessuh-dark .ps-link,
-html.prof-accessuh-dark .psc_label,
-body.prof-accessuh-dark .ps_text,
-body.prof-accessuh-dark .ps-label,
-body.prof-accessuh-dark .ps-link,
-body.prof-accessuh-dark .psc_label {
-  color: var(--prof-accessuh-text-dark-muted) !important;
-}
-
-html.prof-accessuh-dark body,
-body.prof-accessuh-dark {
-  scrollbar-color: var(--prof-accessuh-border-dark) var(--prof-accessuh-bg-dark);
-}
-
-.prof-overlay-anchor {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  max-width: 100%;
-  vertical-align: top;
-}
-
-.prof-overlay-text-anchor {
-  display: block !important;
-  margin: 0 !important;
+/* Paired with releaseHeightClamps(), which pins the original height as min-height. */
+.prof-overlay-unclamped {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 .prof-overlay {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  max-width: 100%;
-  margin: 0 0 0 8px;
-  vertical-align: middle;
-}
-
-.prof-overlay--stacked {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 10px;
-  width: fit-content;
+  gap: 4px 6px;
   max-width: 100%;
-  margin: 0;
-  vertical-align: top;
 }
 
-.prof-overlay-host {
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: 0;
+.prof-overlay--course-header {
+  display: inline-flex;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
+/*
+ * The whole row carries the verdict. The grid nests tables, so the row we match
+ * is not always the one painting the background: tint the row and its cells, and
+ * leave our own chips alone.
+ */
+.prof-overlay-best-row,
+.prof-overlay-best-row td,
+.prof-overlay-best-row th,
+.prof-overlay-best-row div {
+  background-color: var(--prof-red-soft) !important;
+}
+
+.prof-overlay-best-row {
+  box-shadow: inset 4px 0 0 0 var(--prof-red);
+}
+
+.prof-overlay-best-row > td:first-child,
+.prof-overlay-best-row > th:first-child {
+  box-shadow: inset 4px 0 0 0 var(--prof-red);
 }
 
 .prof-overlay__chip {
   display: inline-flex;
   align-items: center;
-  min-height: 22px;
-  padding: 2px 9px;
+  min-height: 20px;
+  padding: 2px 8px;
+  border: 1px solid var(--prof-red-border);
   border-radius: 999px;
-  border: 1px solid var(--prof-accessuh-red-border);
   box-sizing: border-box;
-  background: var(--prof-accessuh-paper);
+  background: var(--prof-paper);
+  color: var(--prof-red-deep);
   font-family: inherit;
   font-size: 11px;
-  line-height: 1.3;
   font-weight: 700;
+  line-height: 1.3;
   text-decoration: none;
-  letter-spacing: 0;
-  color: var(--prof-accessuh-red-deep);
   white-space: nowrap;
 }
 
-.prof-overlay-course-link {
-  display: inline-block;
-  margin: 0 0 0 12px;
-  color: #0b6fb8;
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: underline;
+a.prof-overlay__chip:hover {
+  border-color: var(--prof-red);
+  background: var(--prof-red-soft-strong);
 }
 
-.prof-overlay-course-link:hover {
-  filter: brightness(0.95);
+a.prof-overlay__chip:focus-visible {
+  outline: 2px solid var(--prof-red);
+  outline-offset: 2px;
 }
 
-.prof-overlay__chip:hover {
-  filter: brightness(0.97);
+/* Solid fill so the verdict never reads as one more data pill. */
+.prof-overlay__chip--best {
+  border-color: var(--prof-red);
+  background: var(--prof-red);
+  color: #fff;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+a.prof-overlay__chip--best:hover {
+  background: var(--prof-red-deep);
+  border-color: var(--prof-red-deep);
+}
+
+/* Outlined, not filled: a shared badge is a shortlist, not a verdict. */
+.prof-overlay__chip--best-tied {
+  border: 1px solid var(--prof-red);
+  background: var(--prof-paper);
+  color: var(--prof-red);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+a.prof-overlay__chip--best-tied:hover {
+  background: var(--prof-red-soft-strong);
 }
 
 .prof-overlay__chip--rmp {
-  color: var(--prof-accessuh-red-deep);
-  background: var(--prof-accessuh-red-soft);
-  border-color: var(--prof-accessuh-red-border);
+  background: var(--prof-red-soft);
 }
 
-.prof-overlay__chip--best {
-  color: var(--prof-accessuh-red-deep);
-  background: var(--prof-accessuh-red-soft-strong);
-  border-color: var(--prof-accessuh-red);
-}
-
-.prof-overlay__chip--tba {
-  color: var(--prof-accessuh-red-deep);
-  background: #fff8e8;
-  border-color: #e4cf96;
-}
-
-.prof-overlay__chip--cg {
-  color: var(--prof-accessuh-red-deep);
-  background: #ffffff;
-  border-color: var(--prof-accessuh-red);
+.prof-overlay__chip--cg,
+.prof-overlay__chip--cg-gold,
+.prof-overlay__chip--cg-course {
+  border-color: var(--prof-red);
 }
 
 .prof-overlay__chip--cg-gold,
 .prof-overlay__chip--cg-course {
-  color: var(--prof-accessuh-red-deep);
-  background: var(--prof-accessuh-red-soft-strong);
-  border-color: var(--prof-accessuh-red);
+  background: var(--prof-red-soft-strong);
 }
 
-.prof-overlay--dark .prof-overlay__chip {
-  color: var(--prof-accessuh-text-dark);
-  background: var(--prof-accessuh-paper-dark);
-  border-color: var(--prof-accessuh-border-dark);
+.prof-overlay__chip--tba {
+  border-color: #e4cf96;
+  background: #fff8e8;
 }
 
-.prof-overlay--dark .prof-overlay__chip:hover {
-  filter: brightness(1.08);
+/* Quiet by design: scarcity is a nudge, not an alarm. */
+.prof-overlay__chip--seats {
+  border-color: transparent;
+  background: transparent;
+  padding-left: 2px;
+  color: #8a6d1f;
+  font-weight: 400;
 }
 
-.prof-overlay--dark .prof-overlay__chip--rmp {
-  background: var(--prof-accessuh-paper-dark-soft);
-  border-color: var(--prof-accessuh-accent-dark);
+/* ---- Floating launcher --------------------------------------------------- */
+
+/* Exactly the toggle's size, so drag clamping can never strand the panel. */
+.profcheck-launcher {
+  --prof-red: #c8102e;
+  --prof-ink: #1f2328;
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  z-index: 2147483000;
+  width: 48px;
+  height: 48px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.prof-overlay--dark .prof-overlay__chip--best,
-.prof-overlay--dark .prof-overlay__chip--cg-gold,
-.prof-overlay--dark .prof-overlay__chip--cg-course {
-  background: var(--prof-accessuh-paper-dark-strong);
-  border-color: var(--prof-accessuh-accent-dark);
+.profcheck-launcher__toggle {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  cursor: grab;
+  touch-action: none;
 }
 
-.prof-overlay--dark .prof-overlay__chip--cg {
-  background: var(--prof-accessuh-paper-dark);
-  border-color: var(--prof-accessuh-accent-dark);
+.profcheck-launcher__toggle:active {
+  cursor: grabbing;
 }
 
-.prof-overlay--dark .prof-overlay__chip--tba {
-  background: var(--prof-accessuh-warn-dark);
-  border-color: var(--prof-accessuh-warn-border-dark);
+.profcheck-launcher__toggle img {
+  width: 30px;
+  height: 30px;
+  pointer-events: none;
 }
 
-html.prof-accessuh-dark .prof-overlay-course-link,
-body.prof-accessuh-dark .prof-overlay-course-link {
-  color: #ffb2c0 !important;
+/* Narrow and anchored, so the page stays usable behind it. */
+.profcheck-panel {
+  position: absolute;
+  right: 56px;
+  bottom: 0;
+  width: 210px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.2);
+  color: var(--prof-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.profcheck-panel[hidden] {
+  display: none;
+}
+
+/* Opens away from whichever edge it is parked against. */
+.profcheck-launcher--flip-x .profcheck-panel {
+  right: auto;
+  left: 56px;
+}
+
+.profcheck-launcher--flip-y .profcheck-panel {
+  bottom: auto;
+  top: 0;
+}
+
+.profcheck-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.profcheck-panel__collapse {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #5c5c5c;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profcheck-panel__collapse:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.profcheck-panel__modes {
+  display: grid;
+  gap: 6px;
+}
+
+.profcheck-panel__mode {
+  padding: 7px 10px;
+  border: 1px solid var(--prof-red-border, #e2a9b4);
+  border-radius: 6px;
+  background: #fff;
+  color: #a30f28;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profcheck-panel__mode:hover {
+  background: #fff1f3;
+}
+
+.profcheck-panel__mode--active {
+  border-color: var(--prof-red);
+  background: var(--prof-red);
+  color: #fff;
+}
+
+.profcheck-launcher :focus-visible {
+  outline: 2px solid var(--prof-red);
+  outline-offset: 2px;
 }

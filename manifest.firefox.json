@@ -27,6 +27,7 @@
   },
   "background": {
     "scripts": [
+      "src/config.js",
       "src/background.js"
     ]
   },
@@ -37,12 +38,26 @@
         "https://saprd.my.uh.edu/*"
       ],
       "js": [
-        "src/content.js"
+        "src/config.js",
+        "src/parse.js",
+        "src/scoring.js",
+        "src/content.js",
+        "src/launcher.js"
       ],
       "css": [
         "src/content.css"
       ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon-32.png"
+      ],
+      "matches": [
+        "https://saprd.my.uh.edu/*"
+      ]
     }
   ]
 }
