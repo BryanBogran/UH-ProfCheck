@@ -428,6 +428,57 @@
     return chips;
   }
 
+  /** Plain words, not the weighted arithmetic: the inputs are what students read. */
+  function describeInstructor(result) {
+    const figures = [];
+    if (result.rmp?.avgRating != null) {
+      figures.push(`${formatNumber(result.rmp.avgRating)} rating`);
+    }
+
+    if (result.cougarGrades?.gpa != null) {
+      figures.push(`${formatNumber(result.cougarGrades.gpa)} average GPA`);
+    }
+
+    if (result.cougarGrades?.dropRate != null) {
+      figures.push(`${formatPercent(result.cougarGrades.dropRate)} withdraw`);
+    }
+
+    return figures.join(", ");
+  }
+
+  /** Quiet nudge only when seats are genuinely scarce; never a loud warning. */
+  function createSeatPressureChip(section) {
+    const row = section.anchorNode.closest(config.courseRowSelector);
+    if (!row) {
+      return null;
+    }
+
+    let tightest = null;
+    for (const match of row.textContent.matchAll(OPEN_SEATS_PATTERN)) {
+      const openSeats = Number(match[1]);
+      const totalSeats = Number(match[2]);
+      if (totalSeats && (!tightest || openSeats < tightest.openSeats)) {
+        tightest = { openSeats, totalSeats };
+      }
+    }
+
+    if (!tightest) {
+      return null;
+    }
+
+    const { openSeats, totalSeats } = tightest;
+    if (openSeats > SEAT_PRESSURE_MAX_OPEN && (openSeats / totalSeats) > SEAT_PRESSURE_MAX_RATIO) {
+      return null;
+    }
+
+    return createChip({
+      label: openSeats === 1 ? "1 seat left" : `${openSeats} seats left`,
+      title: `${openSeats} of ${totalSeats} seats remain in this option`,
+      href: "",
+      modifier: "seats"
+    });
+  }
+
   function renderCourseHeaderOverlay(anchorNode, courseCode) {
     const overlay = document.createElement("span");
     overlay.className = "prof-overlay prof-overlay--course-header";

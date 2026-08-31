@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  Smoke test: loads the real content scripts against a stand-in PeopleSoft grid.
+  Run:  python3 -m http.server 8791   then open
+        http://localhost:8791/test/fixtures/smoke.html
+  Pass: 9 chips, a .prof-overlay__chip--best badge, and window.__errors empty.
+  content.js catches render errors and logs them, so __errors must be checked --
+  a ReferenceError inside renderOverlay otherwise looks like a clean render.
+-->
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../src/content.css"></head>
+<body>
+<!-- Minimal stand-in for the PeopleSoft grid: nested instructor spans, no course-code cell. -->
+<table><tbody>
+  <tr id="opt1"><td>1</td><td>Lecture - 19187</td>
+    <td><span id="SSR_INSTR_LONG$span$0"><span id="SSR_INSTR_LONG$0">Melahat Almus</span></span></td>
+    <td>Open Seats 11 of 260</td></tr>
+  <tr id="opt2"><td>2</td><td>Lecture - 11360</td>
+    <td><span id="SSR_INSTR_LONG$span$1"><span id="SSR_INSTR_LONG$1">Blerina Xhabli</span></span></td>
+    <td>Open Seats 2 of 270</td></tr>
+  <tr id="opt3"><td>3</td><td>Lecture - 99999</td>
+    <td><span id="SSR_INSTR_LONG$2">To Be Announced</span></td>
+    <td>Open Seats 40 of 45</td></tr>
+</tbody></table>
+
+<script>
+// Stub just enough of the extension API for the content scripts to run.
+const DATA = {
+  "melahat almus":  { rmp:{avgRating:4.3,numRatings:27}, cougarGrades:{gpa:2.6,dropRate:9.6,link:"#i1"} },
+  "blerina xhabli": { rmp:{avgRating:4.4,numRatings:31}, cougarGrades:{gpa:2.4,dropRate:12.2,link:"#i2"} }
+};
+globalThis.chrome = {
+  storage: {
+    sync:  { get: async () => ({}) },
+    local: { get: async () => ({}), set: async () => {} },
+    session: { get: async () => ({}), set: async () => {} },
+    onChanged: { addListener() {} }
+  },
+  runtime: {
+    getURL: (p) => "../../" + p,
+    sendMessage: async (message) => {
+      if (message.type === "LOOKUP_PROFESSOR") {
+        const hit = DATA[message.payload.professorName.toLowerCase()];
+        return { ok: true, result: hit ? { name: message.payload.professorName, courseCode: "", ...hit } : null };
+      }
+      return { ok: true, result: null };
+    }
+  }
+};
+// content.js catches render errors and logs them, so console.error must be
+// captured too or a ReferenceError inside renderOverlay looks like success.
+window.__errors = [];
+const realError = console.error.bind(console);
+console.error = (...args) => { window.__errors.push(args.map(String).join(" ")); realError(...args); };
+window.addEventListener("error", (e) => { window.__errors.push(String(e.error && e.error.stack || e.message)); });
+window.addEventListener("unhandledrejection", (e) => { window.__errors.push(String(e.reason && e.reason.stack || e.reason)); });
+</script>
+<script src="../../src/config.js"></script>
+<script src="../../src/parse.js"></script>
+<script src="../../src/scoring.js"></script>
+<script src="../../src/content.js"></script>
+<script src="../../src/launcher.js"></script>
+</body></html>
