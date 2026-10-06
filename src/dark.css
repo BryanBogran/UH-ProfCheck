@@ -1,0 +1,254 @@
+/*
+ * Opt-in PeopleSoft theme. The palette feeds the portal's own component tokens;
+ * targeted overrides below cover tokens with other meanings and UH custom CSS.
+ * Removing the root class restores the original cascade, including print styles.
+ */
+@media screen {
+  :root.profcheck-dark {
+    color-scheme: dark;
+    --profcheck-bg: #181b20;
+    --profcheck-surface: #22262d;
+    --profcheck-raised: #2b3039;
+    --profcheck-text: #e8eaee;
+    --profcheck-muted: #b6beca;
+    --profcheck-border: #576170;
+    --profcheck-accent: #ff9bad;
+    --profcheck-selected: #3d2731;
+
+    --pt-palette-0: var(--profcheck-text);
+    --pt-palette-1: var(--profcheck-bg);
+    --pt-palette-2: var(--profcheck-text);
+    --pt-palette-3: var(--profcheck-muted);
+    --pt-palette-4: #a9b3c1;
+    --pt-palette-5: #a9b3c1;
+    --pt-palette-6: #9acbff;
+    --pt-palette-7: #c4e1ff;
+    --pt-palette-8: var(--profcheck-text);
+    --pt-palette-9: var(--profcheck-accent);
+    --pt-palette-10: #ffc0cb;
+    --pt-palette-11: var(--profcheck-raised);
+    --pt-palette-12: var(--profcheck-raised);
+    --pt-palette-13: var(--profcheck-surface);
+    --pt-palette-14: var(--profcheck-surface);
+    --pt-palette-15: var(--profcheck-selected);
+    --pt-palette-16: var(--profcheck-raised);
+    --pt-palette-17: var(--profcheck-border);
+    --pt-palette-18: var(--profcheck-selected);
+    --pt-palette-19: #9e2439;
+    --pt-palette-20: var(--profcheck-border);
+    --pt-palette-21: #788596;
+    --pt-palette-22: #ff9bad;
+    --pt-palette-23: var(--profcheck-border);
+    --pt-palette-24: #788596;
+    --pt-palette-25: #f4d28b;
+    --pt-palette-26: var(--profcheck-raised);
+    --pt-palette-27: rgba(0, 0, 0, 0.5);
+    --pt-palette-28: rgba(0, 0, 0, 0.6);
+    --pt-palette-29: var(--profcheck-border);
+    --pt-palette-30: var(--profcheck-raised);
+    --pt-palette-31: var(--profcheck-bg);
+    --pt-palette-32: var(--profcheck-accent);
+    --pt-palette-33: var(--profcheck-surface);
+    --pt-palette-34: var(--profcheck-text);
+    --pt-palette-35: var(--profcheck-raised);
+    --pt-palette-36: var(--profcheck-accent);
+    --pt-palette-37: var(--profcheck-selected);
+    --pt-palette-38: var(--profcheck-raised);
+    --pt-palette-39: var(--profcheck-surface);
+    --pt-palette-40: var(--profcheck-border);
+    --pt-palette-41: #8cd4a5;
+    --pt-palette-42: #213a2c;
+    --pt-palette-43: var(--profcheck-raised);
+    --pt-palette-44: rgba(0, 0, 0, 0.7);
+    --pt-palette-45: #ffad9b;
+    --pt-palette-46: rgba(0, 0, 0, 0.35);
+    --pt-palette-47: rgba(255, 255, 255, 0.12);
+    --pt-palette-48: #f4d28b;
+
+    /* Component backgrounds that use Redwood brand tokens instead of palette. */
+    --pt-page-title-background-color: var(--profcheck-surface);
+    --pt-panel-background-color: var(--profcheck-surface);
+    --pt-modal-header-background-color: var(--profcheck-surface);
+    --pt-grid-header-background-color: var(--profcheck-raised);
+    --pt-grid-item-alt-background-color: var(--profcheck-surface);
+    --pt-tab-selected-background-color: var(--profcheck-selected);
+    --pt-navbar-item-selected-background-color: var(--profcheck-selected);
+    --pt-homepage-background: var(--profcheck-bg);
+    --pt-strip-background: var(--profcheck-surface);
+
+    --pt-banner-background-color: #a90d27;
+    --pt-banner-text-color: #f8f0f2;
+    --pt-banner-button-hover-background-color: #870b20;
+    --pt-banner-button-active-background-color: #700a1b;
+    --pt-banner-button-border-color: #ffc0cb;
+    --pt-banner-separator-color: #ffc0cb;
+    --pt-banner-button-outline-color: #f8f0f2;
+    --pt-banner-search-open-background-color: var(--profcheck-surface);
+    --pt-banner-search-open-text-color: var(--profcheck-text);
+
+    /* Palette 1 is a background in most places, but button/error text elsewhere. */
+    --pt-page-text-alt-2-color: var(--profcheck-text);
+    --pt-page-alt-2-text-color: var(--profcheck-text);
+    --pt-button-primary-background-color: #a90d27;
+    --pt-button-primary-border-color: #ff9bad;
+    --pt-button-primary-text-color: #fff;
+    --pt-button-primary-hover-background-color: #870b20;
+    --pt-button-primary-hover-border-color: #ffc0cb;
+    --pt-button-primary-hover-text-color: #fff;
+    --pt-button-primary-active-background-color: #700a1b;
+    --pt-button-primary-active-border-color: #ffc0cb;
+    --pt-button-primary-active-text-color: #fff;
+    --pt-control-error-text-color: #fff;
+    --pt-control-error-placeholder-text-color: #fff;
+    --pt-control-placeholder-error-text-color: #fff;
+    --pt-panel-tab-background-color: var(--profcheck-surface);
+    --pt-panel-tab-border-color: var(--profcheck-border);
+    --pt-panel-tab-active-background-color: var(--profcheck-selected);
+    --pt-panel-tab-focus-background-color: var(--profcheck-raised);
+    --pt-panel-item-hover-outline-color: var(--profcheck-accent);
+    --pt-hover-outline-color: var(--profcheck-accent);
+    --pt-link-light-background-text-color: #9acbff;
+    --pt-link-dark-background-text-color: #9acbff;
+    --pt-confirmation-background-color: #213a2c;
+    --pt-confirmation-border-color: #8cd4a5;
+    --pt-confirmation-text-color: #c2f1d1;
+    --pt-badge-background-color: #213a2c;
+    --pt-badge-border-color: #8cd4a5;
+    --pt-badge-text-color: #c2f1d1;
+    --pt-progress-bar-color: #8cd4a5;
+    --pt-scroll-thumb-background-color: #788596;
+    --pt-scroll-thumb-hover-background-color: #a9b3c1;
+    scrollbar-color: #788596 var(--profcheck-bg);
+    background-color: var(--profcheck-bg);
+    color: var(--profcheck-text);
+  }
+
+  :root.profcheck-dark body {
+    background-color: var(--profcheck-bg);
+    color: var(--profcheck-text);
+  }
+
+  :root.profcheck-dark .ps_header_bar .ps-label {
+    color: var(--pt-banner-text-color);
+  }
+
+  /* Student Home tiles bypass the PeopleSoft palette with hardcoded text colors. */
+  :root.profcheck-dark :is(.psc_tile_livedata-field, .psc_tile_livedata-field2) .ps-label,
+  :root.profcheck-dark .psc_tile_livedata-field2 .ps_box-value {
+    color: var(--profcheck-text);
+  }
+
+  :root.profcheck-dark .psc_tile_livedata-field .ps_box-value,
+  :root.profcheck-dark .psc_tile_livedata-field3 .ps-text {
+    color: var(--profcheck-accent);
+  }
+
+  /* UH's custom enrollment stylesheet hardcodes black and brown text. */
+  :root.profcheck-dark div.psa_vsubtab {
+    background: var(--profcheck-bg);
+  }
+
+  :root.profcheck-dark :is(.psa_vtab, .psa_vsubtab):hover {
+    background: var(--profcheck-raised);
+  }
+
+  :root.profcheck-dark .psa_vtab.psa_has_vsubtabs.psc_selected,
+  :root.profcheck-dark li.psc_selected > .psa_vsubtab,
+  :root.profcheck-dark :is(.psa_vtab, .psa_vsubtab).psc_selected {
+    background: var(--profcheck-selected) !important;
+  }
+
+  :root.profcheck-dark :is(.psa_list-linkitem, .psa_color-black, .psa_cal_linkcolor,
+    .psc_header_textbook, .psa_sr-label-anchor) :is(.ps-link, .ps-label),
+  :root.profcheck-dark .psa_list-linkitem > .ps-link-wrapper > .ps-link {
+    color: var(--profcheck-text) !important;
+  }
+
+  :root.profcheck-dark :is(.psa_list-linkitem-hdr, .psa_list-linkitem-hdr2,
+    .psa_list-linkitem-hdr3, .psa_desccolor),
+  :root.profcheck-dark :is(.psa_list-linkitem-hdr, .psa_list-linkitem-hdr2,
+    .psa_list-linkitem-hdr3, .psa_desccolor) :is(.ps-link-wrapper, .ps-link, .ps_box-value) {
+    color: var(--profcheck-accent) !important;
+  }
+
+  :root.profcheck-dark .psa_enroll_dtl_grid .psc_disabled .ps-link {
+    color: var(--profcheck-muted) !important;
+  }
+
+  :root.profcheck-dark .psa_gridrowbg {
+    background-color: #213a2c;
+    color: #c2f1d1;
+  }
+
+  :root.profcheck-dark .psa_grid-cellselected {
+    background-color: var(--profcheck-selected);
+    color: var(--profcheck-text);
+  }
+
+  :root.profcheck-dark :is(input, select, textarea) {
+    accent-color: var(--profcheck-accent);
+  }
+
+  :root.profcheck-dark :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--profcheck-accent) !important;
+    outline-offset: -2px;
+  }
+
+  /* Professor chips and ranking highlights keep their own scoped palette. */
+  :root.profcheck-dark :is(.prof-overlay, .prof-overlay-host, .prof-overlay-best-row,
+    .profcheck-launcher) {
+    --prof-red: #c8102e;
+    --prof-red-deep: #ffb0be;
+    --prof-red-soft: #35232c;
+    --prof-red-soft-strong: #462b36;
+    --prof-red-border: #a65b6e;
+    --prof-paper: #22262d;
+    --prof-ink: #e8eaee;
+  }
+
+  :root.profcheck-dark .prof-overlay__chip--best-tied {
+    border-color: var(--profcheck-accent);
+    color: var(--profcheck-accent);
+  }
+
+  :root.profcheck-dark .prof-overlay__chip--best:hover {
+    background: #a90d27;
+    border-color: #ff9bad;
+  }
+
+  :root.profcheck-dark .prof-overlay__chip--tba {
+    border-color: #aa8e50;
+    background: #382f20;
+    color: #f4d28b;
+  }
+
+  :root.profcheck-dark .prof-overlay__chip--seats {
+    color: #f4d28b;
+  }
+
+  :root.profcheck-dark :is(.profcheck-panel, .profcheck-launcher__toggle) {
+    border: 1px solid var(--profcheck-border);
+    background: var(--profcheck-surface);
+    color: var(--profcheck-text);
+  }
+
+  :root.profcheck-dark :is(.profcheck-panel__collapse, .profcheck-panel__mode) {
+    color: var(--profcheck-text);
+    background: var(--profcheck-surface);
+  }
+
+  :root.profcheck-dark :is(.profcheck-panel__collapse, .profcheck-panel__mode):hover {
+    background: var(--profcheck-raised);
+  }
+
+  :root.profcheck-dark .profcheck-panel__mode--active,
+  :root.profcheck-dark .profcheck-panel__mode--active:hover {
+    background: #a90d27;
+    color: #fff;
+    border-color: #ff9bad;
+  }
+
+  :root.profcheck-dark .profcheck-panel__theme-toggle:checked {
+    border-color: var(--profcheck-accent);
+  }
+}

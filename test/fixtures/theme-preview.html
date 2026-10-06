@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- Local PeopleSoft theme fixture: no login, credentials, or student data. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UH ProfCheck — enrollment theme preview</title>
+  <style>
+    :root {
+      --pt-palette-0:#000; --pt-palette-1:#fff; --pt-palette-2:#161513;
+      --pt-palette-3:#5c5b5a; --pt-palette-4:#767676; --pt-palette-6:#116eb1;
+      --pt-palette-9:#9b5734; --pt-palette-11:#fdf3e4; --pt-palette-18:#f5debd;
+      --pt-palette-23:#bcb6b1;
+      --pt-page-background-color:var(--pt-palette-1);
+      --pt-page-text-color:var(--pt-palette-2);
+      --pt-label-text-color:var(--pt-palette-3);
+      --pt-link-text-color:var(--pt-palette-6);
+      --pt-border-normal-color:var(--pt-palette-23);
+      --pt-header-text-color:var(--pt-palette-9);
+      --pt-selected-background-color:var(--pt-palette-18);
+      --pt-hover-background-color:var(--pt-palette-11);
+      --pt-banner-background-color:#c8102e; --pt-banner-text-color:#fff;
+      --pt-page-title-background-color:#e8f1f0;
+      --pt-panel-background-color:#f5f9f9;
+      --pt-grid-header-background-color:#f5f9f9;
+      --pt-control-background-color:var(--pt-page-background-color);
+      --pt-control-text-color:var(--pt-page-text-color);
+      --pt-modal-background-color:var(--pt-page-background-color);
+      --pt-modal-text-color:var(--pt-page-text-color);
+    }
+    * { box-sizing:border-box }
+    body { margin:0; font:16px/1.5 Arial, sans-serif; background:var(--pt-page-background-color); color:var(--pt-page-text-color) }
+    header { display:flex; justify-content:space-between; align-items:center; padding:16px 24px; background:var(--pt-banner-background-color); color:var(--pt-banner-text-color) }
+    h1 { margin:0; padding:12px 24px; font-size:23px; background:var(--pt-page-title-background-color) }
+    .term { padding:16px 24px; background:var(--pt-panel-background-color); border-bottom:1px solid var(--pt-border-normal-color) }
+    .layout { display:grid; grid-template-columns:250px minmax(0,1fr); min-height:calc(100vh - 180px) }
+    nav { border-right:1px solid var(--pt-border-normal-color) }
+    nav a { display:block; padding:18px 24px; text-decoration:none; color:var(--pt-page-text-color) }
+    nav a[aria-current] { font-weight:bold; background:var(--pt-selected-background-color); box-shadow:inset 3px 0 #c8102e }
+    nav a:hover { background:var(--pt-hover-background-color) }
+    main { padding:24px; overflow:auto }
+    h2 { font-size:21px; margin:0 0 4px; color:var(--pt-header-text-color) }
+    .psa_list-linkitem-hdr .ps-link { color:#a45617 !important }
+    .course-heading { margin-bottom:24px }
+    .search { display:flex; gap:12px; align-items:center; margin-bottom:24px }
+    input[type=search],select { padding:10px 12px; border:1px solid var(--pt-border-normal-color); border-radius:3px; background:var(--pt-control-background-color); color:var(--pt-control-text-color); font:inherit }
+    input[type=search] { width:min(430px,100%) }
+    .table-wrap { overflow:auto; margin:20px 0 }
+    table { border-collapse:collapse; width:100%; font-size:14px }
+    th,td { padding:14px 12px; text-align:left; border-bottom:1px solid var(--pt-border-normal-color); vertical-align:top }
+    th { background:var(--pt-grid-header-background-color); color:var(--pt-page-text-color) }
+    a { color:var(--pt-link-text-color) }
+    .notice { padding:12px 16px; border:1px solid var(--pt-border-normal-color); background:var(--pt-panel-background-color); color:var(--pt-label-text-color) }
+    .fixture-controls { display:flex; gap:16px; margin-top:20px; align-items:center }
+    .fixture-controls button { padding:10px 14px; font:inherit; background:var(--pt-control-background-color); color:var(--pt-control-text-color); border:1px solid var(--pt-border-normal-color); border-radius:3px; cursor:pointer }
+    dialog { max-width:580px; width:90%; border:1px solid var(--pt-border-normal-color); background:var(--pt-modal-background-color); color:var(--pt-modal-text-color); padding:24px }
+    dialog::backdrop { background:rgba(0,0,0,.65) }
+    dialog iframe { width:100%; height:220px; border:1px solid var(--pt-border-normal-color) }
+    @media(max-width:800px) { .layout { grid-template-columns:1fr } nav { display:none } main { padding:16px } .search { flex-wrap:wrap } }
+  </style>
+  <link rel="stylesheet" href="../../src/content.css">
+  <link rel="stylesheet" href="../../src/dark.css">
+  <script src="theme-stub.js"></script>
+  <script src="../../src/theme.js"></script>
+</head>
+<body>
+  <header><strong>University of Houston</strong><span>myUH · Manage Classes</span></header>
+  <h1>Manage Classes</h1>
+  <div class="term"><strong>Spring 2027</strong><br>Undergraduate · University of Houston</div>
+  <div class="layout">
+    <nav aria-label="Enrollment">
+      <a href="#">View My Classes</a><a href="#" aria-current="page">Class Search and Enroll</a>
+      <a href="#">Classic Search</a><a href="#">Enroll by My Requirements</a>
+      <a href="#">Swap Classes</a><a href="#">Drop Classes</a><a href="#">Shopping Cart</a>
+      <a href="#">Course Planning</a><a href="#">Schedule Builder</a>
+    </nav>
+    <main>
+      <div class="search"><label for="keywords">Keywords</label><input type="search" id="keywords" placeholder="Search courses" value="COSC 1336"><label for="session">Session</label><select id="session"><option>Regular Academic Session</option><option>All sessions</option></select></div>
+      <div class="course-heading psa_list-linkitem-hdr"><h2><span id="SSS_SUBJ_CATLG$0">COSC 1336</span></h2><a class="ps-link" href="#">Computer Science and Programming</a></div>
+      <p>Class Selection · 3 options</p>
+      <div class="table-wrap"><table class="ps_grid-flex">
+        <thead><tr><th>Option</th><th>Status</th><th>Class</th><th>Days and Times</th><th>Room</th><th>Instructor</th><th>Seats</th></tr></thead>
+        <tbody id="class-options">
+          <tr id="preview-row-1"><td>1</td><td>Open</td><td><span data-course-code hidden>COSC 1336</span><a href="#">Lecture · 13908</a></td><td>Monday Wednesday<br>2:30 PM – 4:00 PM</td><td>SR2 130</td><td><span id="SSR_INSTR_LONG$0">Alex Professor</span></td><td>Open Seats 11 of 130</td></tr>
+          <tr id="preview-row-2"><td>2</td><td>Open</td><td><span data-course-code hidden>COSC 1336</span><a href="#">Lecture · 17261</a></td><td>Monday Wednesday<br>4:00 PM – 5:30 PM</td><td>SEC 104</td><td><span id="SSR_INSTR_LONG$1">Taylor Instructor</span></td><td>Open Seats 2 of 130</td></tr>
+          <tr id="preview-row-3"><td>3</td><td>Open</td><td><span data-course-code hidden>COSC 1336</span><a href="#">Lecture · 19351</a></td><td>Tuesday Thursday<br>10:00 AM – 11:30 AM</td><td>TBA</td><td><span id="SSR_INSTR_LONG$2">To Be Announced</span></td><td>Open Seats 40 of 45</td></tr>
+        </tbody>
+      </table></div>
+      <p class="notice">Local design preview using PeopleSoft theme tokens. No student information or enrollment actions.</p>
+      <div class="fixture-controls"><button id="open-dialog">Preview class dialog</button><button id="replace-results">Simulate refreshed results</button><a href="../../options/options.html">Extension settings</a></div>
+    </main>
+  </div>
+  <dialog id="class-dialog" aria-label="Class Information"><h2>Class Information</h2><p>COSC 1336 · Lecture · 13908</p><iframe title="Enrollment dialog frame" src="theme-frame.html"></iframe><form method="dialog"><button>Close</button></form></dialog>
+  <script src="../../src/config.js"></script><script src="../../src/parse.js"></script><script src="../../src/scoring.js"></script><script src="../../src/content.js"></script><script src="../../src/launcher.js"></script>
+  <script src="theme-preview.js"></script>
+</body>
+</html>

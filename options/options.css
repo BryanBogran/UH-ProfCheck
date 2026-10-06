@@ -1,33 +1,73 @@
+/* Shares the palette in pages/pages.css so the extension reads as one product. */
 body {
   margin: 0;
-  background: linear-gradient(180deg, #fffaf2 0%, #f4f8ff 100%);
-  color: #1d2630;
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, #2d3138 0, #1f2328 42%, #16191d 100%);
+  color: #f4f1ea;
+  color-scheme: dark;
+  font: 14px/1.5 Arial, Helvetica, sans-serif;
 }
 
 .page {
-  max-width: 760px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 28px 18px 40px;
+}
+
+.hero {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #d6b58e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 h1 {
-  margin: 0 0 8px;
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
 }
 
 .intro {
-  margin: 0 0 24px;
-  color: #4f5d6b;
+  max-width: 720px;
+  margin: 0;
+  color: #c9c3b8;
+}
+
+.card,
+.settings-group {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 14, 18, 0.74);
 }
 
 .card {
-  display: grid;
-  gap: 16px;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #d8e2f0;
-  border-radius: 16px;
-  box-shadow: 0 12px 30px rgba(25, 50, 90, 0.08);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.22);
+}
+
+.settings-group__header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.settings-group__header p {
+  margin: 4px 0 0;
+  color: #c9c3b8;
+}
+
+.settings-group--advanced summary {
+  cursor: pointer;
+  color: #d6b58e;
+  font-weight: 700;
 }
 
 label {
@@ -36,57 +76,111 @@ label {
 }
 
 input,
-textarea,
+select,
 button {
   font: inherit;
 }
 
 input,
-textarea {
+select {
+  width: 100%;
+  box-sizing: border-box;
   padding: 10px 12px;
-  border: 1px solid #becddd;
-  border-radius: 10px;
-  background: #fff;
-}
-
-textarea {
-  resize: vertical;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
 }
 
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.helper {
-  padding: 14px 16px;
-  border: 1px solid #d8e2f0;
-  border-radius: 12px;
-  background: #f8fbff;
-}
-
-.helper p {
-  margin: 10px 0;
+  gap: 12px;
 }
 
 .checkbox input {
+  width: auto;
   margin: 0;
+  accent-color: #f04134;
 }
 
-button {
+.utility-row,
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.link-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
+  text-decoration: none;
+}
+
+.link-card strong {
+  font-size: 1rem;
+}
+
+.link-card span {
+  color: #c9c3b8;
+}
+
+.link-card:hover {
+  border-color: #f04134;
+  background: rgba(240, 65, 52, 0.12);
+}
+
+.button {
   width: fit-content;
   padding: 10px 16px;
-  border: 0;
-  border-radius: 10px;
-  background: #0e6b5c;
-  color: #fff;
+  border: 1px solid #f04134;
+  border-radius: 2px;
+  background: #f04134;
+  color: #16191d;
   font-weight: 700;
   cursor: pointer;
+}
+
+.button--secondary {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #f4f1ea;
+}
+
+:focus-visible {
+  outline: 2px solid #f04134;
+  outline-offset: 2px;
 }
 
 .status {
   min-height: 1.5em;
   margin: 0;
-  color: #0e6b5c;
+  color: #ffb3ad;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .page {
+    padding: 20px 12px 32px;
+  }
+
+  .card,
+  .settings-group {
+    padding: 14px;
+  }
+
+  .link-grid {
+    grid-template-columns: 1fr;
+  }
 }
