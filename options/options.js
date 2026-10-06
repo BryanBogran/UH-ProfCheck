@@ -19,6 +19,7 @@ async function restoreSettings() {
   form.universityName.value = config.universityName;
   form.showRmp.checked = config.showRmp;
   form.showCougarGrades.checked = config.showCougarGrades;
+  form.darkMode.checked = config.darkMode;
   form.defaultScoringMode.value = config.defaultScoringMode;
   if (form.defaultScoringMode.selectedIndex < 0) {
     form.defaultScoringMode.value = DEFAULT_CONFIG.defaultScoringMode;
@@ -50,15 +51,19 @@ async function saveSettings(event) {
     selectors[fieldId] = selector;
   }
 
-  await extensionApi.storage.sync.set({
-    ...selectors,
-    universityName,
-    showRmp: form.showRmp.checked,
-    showCougarGrades: form.showCougarGrades.checked,
-    defaultScoringMode: form.defaultScoringMode.value
-  });
-
-  setStatus("Settings saved.");
+  try {
+    await extensionApi.storage.sync.set({
+      ...selectors,
+      universityName,
+      showRmp: form.showRmp.checked,
+      showCougarGrades: form.showCougarGrades.checked,
+      darkMode: form.darkMode.checked,
+      defaultScoringMode: form.defaultScoringMode.value
+    });
+    setStatus("Settings saved.");
+  } catch (error) {
+    setStatus(`Could not save settings: ${error.message}`);
+  }
 }
 
 /** An unparseable selector would throw on every page scan, so it never ships. */
@@ -77,7 +82,8 @@ function describeSelectorProblem(selector) {
 
 async function clearCache() {
   try {
-    await extensionApi.runtime.sendMessage({ type: "CLEAR_CACHE" });
+    const response = await extensionApi.runtime.sendMessage({ type: "CLEAR_CACHE" });
+    if (!response?.ok) throw new Error(response?.error || "No response from the extension.");
     setStatus("API cache cleared.");
   } catch (error) {
     setStatus(`Could not clear the cache: ${error.message}`);

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "UH ProfCheck",
   "version": "0.2.0",
-  "description": "Overlay-first UH registration helper with in-page section scoring, compare, and shortlist trays.",
+  "description": "Professor ratings, grade history, section rankings, and optional dark mode for University of Houston enrollment.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -20,6 +20,20 @@
   },
   "options_page": "options/options.html",
   "content_scripts": [
+    {
+      "matches": [
+        "https://saprd.my.uh.edu/*"
+      ],
+      "js": [
+        "src/theme.js"
+      ],
+      "css": [
+        "src/dark.css"
+      ],
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_start"
+    },
     {
       "matches": [
         "https://saprd.my.uh.edu/*"

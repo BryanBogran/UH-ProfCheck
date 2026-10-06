@@ -1,35 +1,30 @@
-# Privacy Policy
+# UH ProfCheck Privacy Policy
 
-Professor Overlay is designed for the University of Houston enrollment portal.
+Effective date: October 6, 2026
 
 ## What the extension accesses
 
-- The extension reads professor names and course codes from the currently open UH enrollment page at `https://saprd.my.uh.edu/*`.
-- The extension does not read unrelated tabs or unrelated websites.
+UH ProfCheck reads professor names, course codes, and displayed seat availability on University of Houston enrollment pages at `https://saprd.my.uh.edu/*`. It does not read unrelated tabs or websites.
 
-## What the extension sends off-device
+## What is sent off-device
 
-- Professor names are sent to `https://api.cougargrades.io/api/external/rmp/search` to look up RateMyProfessor data.
-- Professor names are sent to `https://api.cougargrades.io/api/instructor/{name}` to look up CougarGrades instructor data.
-- Course codes are used locally to construct CougarGrades course links such as `https://cougargrades.io/c/COSC%203380`.
+The extension sends public professor names to the CougarGrades API at `https://api.cougargrades.io/api/instructor/{name}` and its RateMyProfessors bridge at `/api/external/rmp/search`. When an instructor is unassigned, it sends the course code to `/api/course/{courseCode}` for course-wide GPA and withdrawal information. CougarGrades is the recipient of these requests. The extension also builds links to CougarGrades and RateMyProfessors; those sites receive normal browser requests when a user opens a link.
 
-## What the extension stores
+The extension does not send student IDs, authentication cookies, personal schedules, enrollment actions, or form submissions to these data services.
 
-- User configuration such as selectors and toggles is stored with Chrome sync storage.
-- No browsing history, authentication cookies, student IDs, schedules, or form submissions are intentionally stored by the extension.
+## What is stored
 
-## Data sharing
+- Preferences, including display toggles, ranking mode, dark mode, and selectors, use browser sync storage.
+- The floating button position uses local storage.
+- Professor and course API responses are cached in browser session storage. Clear API Cache in settings removes these responses.
+- The extension does not intentionally store browsing history, authentication cookies, student IDs, personal schedules, or form submissions.
 
-- The extension does not sell user data.
-- The extension does not send analytics, ads, or telemetry to the developer.
-- The only network requests made by the extension are the CougarGrades API requests needed to fetch professor metadata.
+## Sharing and security
 
-## Security notes
-
-- The extension does not execute remote code.
-- The extension opens external links in a new tab with `noopener,noreferrer`.
-- The extension is scoped to the UH enrollment domain in the manifest.
+The extension does not sell user data or send analytics, ads, or developer telemetry. It does not execute remote code. External insight links open using `noopener noreferrer`. Network lookups are limited to the CougarGrades API needed for professor and course information.
 
 ## Contact
 
-Before publishing to the Chrome Web Store, host this policy at a stable public URL and use that URL in the store listing if required.
+Questions: flamezbb1@gmail.com
+
+The public privacy policy linked from the store listing should contain this current disclosure when publishing V2.

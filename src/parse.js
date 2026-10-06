@@ -2,7 +2,7 @@
 // Everything here takes strings, never nodes, so it is testable without a DOM.
 globalThis.PROFCHECK_PARSE = (() => {
   const COURSE_CODE_PATTERN = /\b([A-Z]{2,5}\s?\d{4})\b/;
-  const PROFESSOR_NAME_PATTERN = /^[A-Za-z ,.'-]{4,}$/;
+  const PROFESSOR_NAME_PATTERN = /^[\p{L}\p{M} ,.'’\-]{4,}$/u;
   const PLACEHOLDER_INSTRUCTOR_NAMES = new Set(["to be announced", "tba", "staff"]);
 
   function normalizeWhitespace(value) {
@@ -16,7 +16,7 @@ globalThis.PROFCHECK_PARSE = (() => {
 
   /** A cell can list more than a name; take the first segment shaped like one. */
   function extractProfessorName(text) {
-    return normalizeWhitespace(text)
+    return normalizeWhitespace(String(text || "").replace(/\(.*?\)/g, ""))
       .split(/[\/;|]/)
       .map((segment) => segment.trim())
       .find((segment) => PROFESSOR_NAME_PATTERN.test(segment)) || "";
@@ -24,7 +24,7 @@ globalThis.PROFCHECK_PARSE = (() => {
 
   function extractCourseCode(text) {
     const match = normalizeWhitespace(text).toUpperCase().match(COURSE_CODE_PATTERN);
-    return match ? match[1].replace(/\s+/, " ") : "";
+    return match ? match[1].replace(/\s+/, " ").replace(/([A-Z])(\d)/, "$1 $2") : "";
   }
 
   /** Number("") and Number(null) are 0, so absence is rejected before coercion. */

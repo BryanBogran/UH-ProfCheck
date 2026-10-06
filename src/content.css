@@ -99,6 +99,11 @@ a.prof-overlay__chip:focus-visible {
   text-transform: uppercase;
 }
 
+/* PeopleSoft's global link colors must not override this solid recommendation. */
+.prof-overlay .prof-overlay__chip--best {
+  color: #fff !important;
+}
+
 a.prof-overlay__chip--best:hover {
   background: var(--prof-red-deep);
   border-color: var(--prof-red-deep);
@@ -270,4 +275,63 @@ a.prof-overlay__chip--best-tied:hover {
 .profcheck-launcher :focus-visible {
   outline: 2px solid var(--prof-red);
   outline-offset: 2px;
+}
+
+.profcheck-panel__appearance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 44px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--prof-red-border, #e2a9b4);
+  cursor: pointer;
+}
+
+.profcheck-panel__status {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.profcheck-panel__status:empty {
+  display: none;
+}
+
+.profcheck-panel__theme-toggle {
+  appearance: none;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 22px;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid #737b86;
+  border-radius: 999px;
+  background: #737b86;
+  cursor: pointer;
+}
+
+.profcheck-panel__theme-toggle::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 160ms ease-out;
+}
+
+.profcheck-panel__theme-toggle:checked {
+  border-color: #c8102e;
+  background: #c8102e;
+}
+
+.profcheck-panel__theme-toggle:checked::before {
+  transform: translateX(16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profcheck-panel__theme-toggle::before {
+    transition: none;
+  }
 }

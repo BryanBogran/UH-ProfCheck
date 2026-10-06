@@ -4,6 +4,7 @@ globalThis.importScripts?.("config.js");
 const extensionApi = globalThis.browser ?? globalThis.chrome;
 const DEFAULT_CONFIG = globalThis.PROFCHECK_DEFAULTS;
 const COURSE_CODE_PATTERN = /\b([A-Z]{2,5}\s?\d{4})\b/;
+const LOOKUP_TIMEOUT_MS = 15000;
 
 const MESSAGE_HANDLERS = {
   LOOKUP_PROFESSOR: handleProfessorLookup,
@@ -39,10 +40,15 @@ async function handleProfessorLookup(payload) {
     return null;
   }
 
-  const cacheKey = `professor::${professorName}::${config.universityName}::${config.showRmp}::${config.showCougarGrades}`;
+  const courseCode = normalizeCourseCode(payload?.courseCode);
+  const cacheKey = `professor::${JSON.stringify([
+    professorName.toLowerCase(), config.universityName, config.showRmp,
+    config.showCougarGrades, config.rmpStrictSearch, config.cougarGradesApiBaseUrl,
+    config.cougarGradesBaseUrl, config.rmpProfessorBaseUrl
+  ])}`;
   const cached = await readCachedLookup(cacheKey);
   if (cached) {
-    return cached.result;
+    return { ...cached.result, courseCode };
   }
 
   const lastFirstName = toLastFirst(professorName);
@@ -54,7 +60,7 @@ async function handleProfessorLookup(payload) {
 
   const result = {
     name: professorName,
-    courseCode: normalizeCourseCode(payload?.courseCode),
+    courseCode,
     rmp: settledValue(rmp, "RMP"),
     cougarGrades: settledValue(cougarGrades, "CougarGrades instructor")
   };
@@ -74,7 +80,9 @@ async function handleCourseLookup(payload) {
     return null;
   }
 
-  const cacheKey = `course::${courseCode}`;
+  const cacheKey = `course::${JSON.stringify([
+    courseCode, config.cougarGradesApiBaseUrl, config.cougarGradesBaseUrl
+  ])}`;
   const cached = await readCachedLookup(cacheKey);
   if (cached) {
     return cached.result;
@@ -117,7 +125,7 @@ async function loadConfig() {
 }
 
 async function fetchJson(url) {
-  const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), { signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS) });
   if (!response.ok) {
     throw new Error(`${url.pathname} failed with ${response.status}`);
   }
@@ -139,7 +147,8 @@ async function fetchRmp(professorName, config) {
     candidate.school?.name?.toLowerCase() === config.universityName.toLowerCase()
   );
 
-  const best = schoolMatch || candidates[0];
+  // An identically named instructor at another university is not a match.
+  const best = schoolMatch;
   if (!best) {
     return null;
   }
@@ -179,16 +188,16 @@ async function fetchCougarGradesCourse(courseCode, config) {
 
 /** Parenthetical titles come out before whitespace collapses, not after. */
 function normalizeName(input) {
+  if (/^\s*(staff|tba|to be announced)\s*$/i.test(String(input || ""))) return "";
   return String(input || "")
     .replace(/\(.*?\)/g, "")
-    .replace(/\b(staff|tba|to be announced)\b/gi, "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
 function normalizeCourseCode(input) {
   const match = String(input || "").toUpperCase().match(COURSE_CODE_PATTERN);
-  return match ? match[1].replace(/\s+/, " ") : "";
+  return match ? match[1].replace(/\s+/, " ").replace(/([A-Z])(\d)/, "$1 $2") : "";
 }
 
 function toLastFirst(name) {

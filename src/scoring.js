@@ -1,6 +1,6 @@
 // Pure section-scoring math, shared by the overlay and test/scoring.test.mjs.
 globalThis.PROFCHECK_SCORING = (() => {
-  // drop metrics are ranged from 0 to 25, no drop rate is higher
+  // Withdrawals above 25% clamp to the lowest score; this is a scoring range.
   const METRIC_RANGES = {
     rating: { worst: 2, best: 5 },
     gpa: { worst: 2, best: 3.9 },
@@ -14,8 +14,7 @@ globalThis.PROFCHECK_SCORING = (() => {
   const NEUTRAL_VALUE = 0.5;
   const REQUIRED_METRIC_COUNT = 2;
 
-  // ponytail: flat threshold. Raise it if too few sections earn a badge, or make
-  // it relative to the spread of the course once there is a reason to.
+  // Scores within three percentage points share the recommendation.
   const MINIMUM_WINNING_MARGIN = 0.03;
 
   const SCORING_MODES = {

@@ -6,6 +6,7 @@ globalThis.PROFCHECK_DEFAULTS = {
   courseCodeSelector: "span[id*='SSS_SUBJ_CATLG'], [data-course-code], .course-code, .subject-catalog",
   showRmp: true,
   showCougarGrades: true,
+  darkMode: false,
   defaultScoringMode: "balanced",
   rmpStrictSearch: true,
   cougarGradesBaseUrl: "https://cougargrades.io",

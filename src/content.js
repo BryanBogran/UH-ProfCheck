@@ -10,18 +10,19 @@
   const OPEN_SEATS_PATTERN = /Open Seats (\d+) of (\d+)/g;
   const SEAT_PRESSURE_MAX_OPEN = 5;
   const SEAT_PRESSURE_MAX_RATIO = 0.1;
-  const LAUNCHER_POSITION_KEY = "launcherPosition";
-  const DRAG_THRESHOLD_PX = 4;
   const NO_BADGED_PROFESSORS = new Set();
+  const LOOKUP_SETTINGS = new Set([
+    "showRmp", "showCougarGrades", "universityName", "rmpStrictSearch",
+    "cougarGradesApiBaseUrl", "cougarGradesBaseUrl", "rmpProfessorBaseUrl",
+    "courseRowSelector", "instructorSelector", "courseCodeSelector"
+  ]);
 
   const config = {
     ...DEFAULT_CONFIG,
     ...(await extensionApi.storage.sync.get(Object.keys(DEFAULT_CONFIG)))
   };
 
-  if (!SCORING_MODES[config.defaultScoringMode]) {
-    config.defaultScoringMode = DEFAULT_CONFIG.defaultScoringMode;
-  }
+  validateConfig();
 
   // Section state is keyed by its instructor node and pruned once that node
   // detaches, so PeopleSoft postbacks cannot pile up detached DOM.
@@ -29,8 +30,8 @@
   const anchorNodesByCourseCode = new Map();
   const rankingsByCourseCode = new Map();
   const inFlightLookups = new Map();
-  const renderedCourseNodes = new WeakSet();
-  const instructorClaimsByRow = new WeakMap();
+  const courseOverlays = new Map();
+  let instructorClaimsByRow = new WeakMap();
 
   const observer = new MutationObserver(handlePageMutations);
   let queuedScanFrame = 0;
@@ -42,7 +43,7 @@
   extensionApi.storage.onChanged.addListener(applyChangedSettings);
 
   function observePage() {
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
   }
 
   function stopObserving() {
@@ -70,12 +71,23 @@
   }
 
   function isOwnMutation(mutation) {
-    return Boolean(mutation.target.closest?.(".prof-overlay-host, .prof-overlay, .profcheck-launcher"));
+    const selector = ".prof-overlay-host, .prof-overlay, .profcheck-launcher";
+    const target = mutation.target.nodeType === Node.ELEMENT_NODE
+      ? mutation.target : mutation.target.parentElement;
+    if (target?.closest(selector)) return true;
+    const changedNodes = [...mutation.addedNodes, ...mutation.removedNodes];
+    return changedNodes.length > 0 && changedNodes.every((node) => node.matches?.(selector));
   }
 
   function scanPage() {
     pruneDetachedSections();
     removeOrphanedHosts();
+    courseOverlays.forEach(({ overlay }, node) => {
+      if (!node.isConnected || !node.matches(config.courseCodeSelector)) {
+        overlay.remove();
+        courseOverlays.delete(node);
+      }
+    });
 
     document.querySelectorAll(config.courseCodeSelector).forEach(processCourseNode);
     document.querySelectorAll(config.instructorSelector).forEach(processInstructorNode);
@@ -91,14 +103,21 @@
         processInstructorNode(placeholderNode);
       }
     });
+
+    rebuildRankings();
   }
 
   function pruneDetachedSections() {
     sectionsByAnchorNode.forEach((section, anchorNode) => {
-      if (anchorNode.isConnected) {
+      if (anchorNode.isConnected
+        && normalizeWhitespace(anchorNode.textContent) === section.instructorText
+        && extractRowCourseCode(anchorNode) === section.courseCode) {
         return;
       }
 
+      const claims = instructorClaimsByRow.get(anchorNode.closest(config.courseRowSelector));
+      const claimKey = section.professorName.toLowerCase() || `tba::${section.courseCode}`;
+      if (claims?.get(claimKey) === anchorNode) claims.delete(claimKey);
       sectionsByAnchorNode.delete(anchorNode);
       anchorNodesByCourseCode.get(section.courseCode)?.delete(anchorNode);
       highlightRow(section, false);
@@ -121,17 +140,19 @@
   }
 
   function processCourseNode(node) {
-    if (renderedCourseNodes.has(node) || !isCourseHeaderNode(node)) {
+    if (!isCourseHeaderNode(node)) {
       return;
     }
 
     const courseCode = extractCourseCode(node.textContent);
-    if (!courseCode) {
-      return;
+    const existing = courseOverlays.get(node);
+    if (config.showCougarGrades && courseCode
+      && existing?.courseCode === courseCode && existing.overlay.isConnected) return;
+    existing?.overlay.remove();
+    courseOverlays.delete(node);
+    if (config.showCougarGrades && courseCode) {
+      courseOverlays.set(node, { courseCode, overlay: renderCourseHeaderOverlay(node, courseCode) });
     }
-
-    renderedCourseNodes.add(node);
-    renderCourseHeaderOverlay(node, courseCode);
   }
 
   async function processInstructorNode(node) {
@@ -168,6 +189,7 @@
       hostNode: null,
       courseCode,
       professorName,
+      instructorText: normalizeWhitespace(node.textContent),
       result: null,
       courseResult: null,
       isPlaceholder
@@ -208,7 +230,9 @@
     let lookup = inFlightLookups.get(cacheKey);
     if (!lookup) {
       lookup = extensionApi.runtime.sendMessage(message)
-        .finally(() => inFlightLookups.delete(cacheKey));
+        .finally(() => {
+          if (inFlightLookups.get(cacheKey) === lookup) inFlightLookups.delete(cacheKey);
+        });
       inFlightLookups.set(cacheKey, lookup);
     }
 
@@ -279,7 +303,7 @@
 
   function updateBestProfessor(section) {
     const professorKey = getProfessorKey(section);
-    if (!professorKey) {
+    if (!professorKey || !section.courseCode || !section.result) {
       return;
     }
 
@@ -289,7 +313,10 @@
     ));
     ranking.professorKeys.add(professorKey);
 
-    const score = computeScore(section.result, SCORING_MODES[config.defaultScoringMode].weights);
+    const score = computeScore({
+      rmp: config.showRmp ? section.result.rmp : null,
+      cougarGrades: config.showCougarGrades ? section.result.cougarGrades : null
+    }, SCORING_MODES[config.defaultScoringMode].weights);
     if (score == null) {
       return;
     }
@@ -375,9 +402,7 @@
       }));
     }
 
-    if (overlay.childNodes.length) {
-      hostNode.replaceChildren(overlay);
-    }
+    hostNode.replaceChildren(...(overlay.childNodes.length ? [overlay] : []));
   }
 
   // Instructor figures when we have them, otherwise the course-wide fallback.
@@ -491,6 +516,7 @@
     }));
 
     anchorNode.insertAdjacentElement("afterend", overlay);
+    return overlay;
   }
 
   /** Anchors carry their own target/rel; chips without a destination are inert. */
@@ -528,8 +554,12 @@
 
   /** The badge reads as the row's verdict, not as one more data pill. */
   function highlightRow(section, isBest) {
-    section.anchorNode.closest(config.courseRowSelector)
-      ?.classList.toggle("prof-overlay-best-row", isBest);
+    const row = section.anchorNode.closest(config.courseRowSelector);
+    if (!row) return;
+    const hasWinningInstructor = isBest || [...sectionsByAnchorNode.values()].some((other) =>
+      other !== section && other.result && isBestProfessor(other)
+      && other.anchorNode.closest(config.courseRowSelector) === row);
+    row.classList.toggle("prof-overlay-best-row", hasWinningInstructor);
   }
 
   /**
@@ -569,16 +599,49 @@
     }
 
     Object.entries(changes).forEach(([key, change]) => {
-      config[key] = change.newValue;
+      if (key in DEFAULT_CONFIG) config[key] = change.newValue ?? DEFAULT_CONFIG[key];
     });
+    validateConfig();
 
-    if (!SCORING_MODES[config.defaultScoringMode]) {
-      config.defaultScoringMode = DEFAULT_CONFIG.defaultScoringMode;
+    if (Object.keys(changes).some((key) => LOOKUP_SETTINGS.has(key))) {
+      observer.disconnect();
+      sectionsByAnchorNode.forEach((section) => {
+        section.anchorNode.closest(config.courseRowSelector)?.classList.remove("prof-overlay-best-row");
+        section.hostNode?.remove();
+      });
+      sectionsByAnchorNode.clear();
+      anchorNodesByCourseCode.clear();
+      rankingsByCourseCode.clear();
+      inFlightLookups.clear();
+      instructorClaimsByRow = new WeakMap();
+      courseOverlays.forEach(({ overlay }) => overlay.remove());
+      courseOverlays.clear();
+      scanPage();
+      observePage();
+      return;
     }
 
+    if (changes.defaultScoringMode) rebuildRankings();
+  }
+
+  function rebuildRankings() {
     rankingsByCourseCode.clear();
     sectionsByAnchorNode.forEach(updateBestProfessor);
     sectionsByAnchorNode.forEach(renderOverlay);
+  }
+
+  function validateConfig() {
+    if (!SCORING_MODES[config.defaultScoringMode]) {
+      config.defaultScoringMode = DEFAULT_CONFIG.defaultScoringMode;
+    }
+    for (const key of ["courseRowSelector", "instructorSelector", "courseCodeSelector"]) {
+      try {
+        if (typeof config[key] !== "string" || !config[key].trim()) throw new Error("Empty selector");
+        document.querySelector(config[key]);
+      } catch {
+        config[key] = DEFAULT_CONFIG[key];
+      }
+    }
   }
 
   function getProfessorKey(section) {
@@ -599,11 +662,19 @@
   }
 
 
-  /** Row-scoped only: a page-wide fallback would mis-group unrelated sections. */
+  /** Course-detail tables keep their single course header above the rows. */
   function extractRowCourseCode(node) {
     const row = node.closest(config.courseRowSelector);
     const courseCodeNode = row?.querySelector(config.courseCodeSelector);
-    return courseCodeNode ? extractCourseCode(courseCodeNode.textContent) : "";
+    if (courseCodeNode) return extractCourseCode(courseCodeNode.textContent);
+    for (let parent = row?.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+      const codes = new Set([...parent.querySelectorAll(config.courseCodeSelector)]
+        .filter(isCourseHeaderNode)
+        .map((header) => extractCourseCode(header.textContent)).filter(Boolean));
+      if (codes.size === 1) return [...codes][0];
+      if (codes.size > 1) break;
+    }
+    return "";
   }
 
 

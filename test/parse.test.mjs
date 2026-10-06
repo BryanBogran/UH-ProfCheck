@@ -29,6 +29,8 @@ test("a name is pulled out of a cell that carries more than the name", () => {
   assert.equal(extractProfessorName("Ann Patricia O'Bryan"), "Ann Patricia O'Bryan");
   assert.equal(extractProfessorName("Jesse J. Rainbow"), "Jesse J. Rainbow");
   assert.equal(extractProfessorName("Ramamurthy, Uma"), "Ramamurthy, Uma");
+  assert.equal(extractProfessorName("José García"), "José García");
+  assert.equal(extractProfessorName("Nora O’Neill (Primary)"), "Nora O’Neill");
   // Whitespace collapses before the split, so only / ; | separate fields.
   assert.equal(extractProfessorName("Carlos Ordonez | MW 10:00AM"), "Carlos Ordonez");
   assert.equal(extractProfessorName("Smith / Jones"), "Smith");
@@ -43,7 +45,7 @@ test("segments that are not names are rejected", () => {
 test("course codes are found and normalised", () => {
   assert.equal(extractCourseCode("MATH 2414"), "MATH 2414");
   assert.equal(extractCourseCode("cosc 3340"), "COSC 3340");
-  assert.equal(extractCourseCode("MATH2414"), "MATH2414");
+  assert.equal(extractCourseCode("MATH2414"), "MATH 2414");
   assert.equal(extractCourseCode("Calculus II"), "");
   assert.equal(extractCourseCode("Lecture - 19187"), "");
 });
