@@ -23,7 +23,7 @@ Compare trays, shortlist/planner trays, and confidence-warning controls are not 
 
 Open `chrome://extensions`, enable Developer Mode, choose Load unpacked, and select this folder. Reload the extension after editing source, then navigate to a fresh myUH page. A PeopleSoft transaction URL can produce a portal error if reloaded; use the portal Home tile navigation to reopen Manage Classes in that case.
 
-Firefox uses `manifest.firefox.json` copied over `manifest.json` in a separate build folder. Chrome is the publishing target of the current release review; Firefox needs its own real-browser test before publishing there.
+For Firefox, open `about:debugging#/runtime/this-firefox`, choose Load Temporary Add-on, and select `dist/UH-ProfCheck-0.2.0-firefox.zip` (built below). Firefox needs its own real-browser test before publishing there.
 
 ## Run checks
 
@@ -34,13 +34,14 @@ python3 -m http.server 8791 --bind 127.0.0.1
 
 Open `http://127.0.0.1:8791/test/fixtures/release-check.html` for browser regressions against deterministic sample data using the real extension scripts. Open `test/fixtures/theme-preview.html` through the same server for manual dark-mode, settings, keyboard, refreshed-results, and dialog checks. These fixtures use local test doubles and do not contact student accounts or external data services.
 
-## Build the Chrome upload
+## Build the store uploads
 
 ```sh
-python3 scripts/package-release.py
+python3 scripts/package-release.py chrome
+python3 scripts/package-release.py firefox
 ```
 
-The validated ZIP is `dist/UH-ProfCheck-0.2.0-chrome.zip`. It includes only the root Chrome manifest, runtime scripts/styles, icons, options, and support pages. Tests, Git files, previews, marketing assets, and the Firefox manifest are excluded.
+Each validated ZIP (`dist/UH-ProfCheck-0.2.0-chrome.zip`, `dist/UH-ProfCheck-0.2.0-firefox.zip`) contains the matching manifest at the root as `manifest.json`, plus runtime scripts/styles, icons, options, and support pages. Tests, Git files, previews, and marketing assets are excluded. Firefox requires 140+.
 
 Chrome requires the manifest at the ZIP root and a version higher than the previous published version: https://developer.chrome.com/docs/webstore/prepare
 
