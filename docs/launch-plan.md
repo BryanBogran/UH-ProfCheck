@@ -24,7 +24,7 @@ Written 2026-11-17. This plan covers the work from today until the first non-UH 
 | C6 Background gating | Done |
 | C7 Campus switches and permissions | Done: `src/campus-access.js`. The full switch-on flow can only be tried in a browser once a non-UH campus exists |
 | Launcher campus awareness, CI Chrome | Done. The launcher hides on pages with no campus or a disabled campus, shows the campus note, and hides rankings and dark mode where they don't apply |
-| C8 Release gates | Automated part done: 77/77 tests, ZIP inspected (27 files, no tests, no template or example adapter). **Bryan:** bump the version to 0.3.0, check live UH, and test the upgrade from 0.2.0 in real Chrome |
+| C8 Release gates | Done: automated checks plus live UH, outage, switch and upgrade tests passed. Ready to submit (see `docs/RELEASE-CHECK.md`) |
 | D1 Discovery checklist | Written: `docs/discovery-checklist.md`. **Bryan:** send it to the volunteer |
 
 **Owners:** **B** = Bryan only (accounts, legal, approvals, store). **C** = code work Claude can do with Bryan reviewing. **V** = the volunteer / campus maintainer. **T** = a second campus tester.
