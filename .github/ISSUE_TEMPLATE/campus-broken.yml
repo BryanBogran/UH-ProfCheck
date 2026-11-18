@@ -1,0 +1,43 @@
+name: Campus broken
+description: ProfCheck stopped working or shows wrong information on a supported campus portal.
+title: "Campus broken: <campus>"
+labels: ["campus-broken"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. If this isn't fixed and verified within 14 days, the campus is paused (off by default) until it is.
+        **Don't post student IDs, login details, links containing session values, or unredacted screenshots.**
+  - type: input
+    id: campus
+    attributes:
+      label: Campus
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ProfCheck version
+      description: From chrome://extensions
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: What's wrong?
+      options:
+        - No overlays appear
+        - Wrong instructor or course
+        - Wrong seat count
+        - Overlays in the wrong place
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Which page, what you did, what you expected, and what happened. Describe the layout if it changed.
+    validations:
+      required: true

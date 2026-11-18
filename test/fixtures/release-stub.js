@@ -1,5 +1,7 @@
 // Deterministic test double. It never sends network requests or touches user preferences.
 (() => {
+  // The engine picks its campus adapter from the page URL; pretend to be UH.
+  globalThis.PROFCHECK_PAGE_URL = 'https://saprd.my.uh.edu/psc/fixture';
   const settings = {}, listeners = [], calls = [], errors = [];
   const data = {
     'Instructor Alpha':{rmp:{avgRating:4.9,numRatings:120,link:'#rating'},cougarGrades:{gpa:2.9,dropRate:2,link:'#grade'}},

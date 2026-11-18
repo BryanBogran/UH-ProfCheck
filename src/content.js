@@ -1,46 +1,84 @@
+// Shared engine: picks the campus adapter for this page, checks what it returns,
+// and renders seat notices, ratings, grades, and rankings. Adapters only read
+// the page (src/adapters/*.js); everything with side effects lives here.
 (async function initProfessorOverlay() {
   const extensionApi = globalThis.browser ?? globalThis.chrome;
   const DEFAULT_CONFIG = globalThis.PROFCHECK_DEFAULTS;
+  const CAMPUSES = globalThis.PROFCHECK_CAMPUSES;
+  const ADAPTERS = globalThis.PROFCHECK_ADAPTERS;
+  const PARSE = globalThis.PROFCHECK_PARSE;
   const { SCORING_MODES, computeScore, pickBadgedProfessors } = globalThis.PROFCHECK_SCORING;
-  const {
-    normalizeWhitespace, isPlaceholderInstructor, extractProfessorName,
-    extractCourseCode, formatNumber, formatPercent
-  } = globalThis.PROFCHECK_PARSE;
+  const { normalizeWhitespace, formatNumber, formatPercent } = PARSE;
 
-  const OPEN_SEATS_PATTERN = /Open Seats (\d+) of (\d+)/g;
   const SEAT_PRESSURE_MAX_OPEN = 5;
   const SEAT_PRESSURE_MAX_RATIO = 0.1;
+  // More than this share of an adapter's sections failing checks hides the page.
+  const MAX_REJECTED_SHARE = 0.5;
   const NO_BADGED_PROFESSORS = new Set();
+  const SELECTOR_KEYS = ["courseRowSelector", "instructorSelector", "courseCodeSelector"];
   const LOOKUP_SETTINGS = new Set([
     "showRmp", "showCougarGrades", "universityName", "rmpStrictSearch",
     "cougarGradesApiBaseUrl", "cougarGradesBaseUrl", "rmpProfessorBaseUrl",
-    "courseRowSelector", "instructorSelector", "courseCodeSelector"
+    ...SELECTOR_KEYS
   ]);
 
-  const config = {
-    ...DEFAULT_CONFIG,
-    ...(await extensionApi.storage.sync.get(Object.keys(DEFAULT_CONFIG)))
-  };
+  // Content scripts run in an isolated world, so only extension test pages can
+  // set PROFCHECK_PAGE_URL; the live page cannot.
+  const campus = CAMPUSES.campusForUrl(globalThis.PROFCHECK_PAGE_URL ?? location.href);
+  const adapter = campus && ADAPTERS.get(campus.id);
+  if (!adapter) {
+    return;
+  }
 
+  const hasLookups = campus.dataSources.length > 0;
+  const hasGradeSource = campus.dataSources.includes("cougargrades");
+  const features = campus.features;
+
+  const stored = await extensionApi.storage.sync.get([...Object.keys(DEFAULT_CONFIG), "campuses"]);
+  const config = { ...DEFAULT_CONFIG, ...stored };
   validateConfig();
+  let active = isCampusEnabled(stored.campuses);
 
-  // Section state is keyed by its instructor node and pruned once that node
-  // detaches, so PeopleSoft postbacks cannot pile up detached DOM.
+  publishCampusState();
+
+  // Section state is keyed by its anchor node and pruned once that node
+  // detaches or changes, so PeopleSoft postbacks cannot pile up detached DOM.
   const sectionsByAnchorNode = new Map();
   const anchorNodesByCourseCode = new Map();
   const rankingsByCourseCode = new Map();
   const inFlightLookups = new Map();
   const courseOverlays = new Map();
   let instructorClaimsByRow = new WeakMap();
+  let warnedAboutRejection = false;
 
   const observer = new MutationObserver(handlePageMutations);
   let queuedScanFrame = 0;
 
-  scanPage();
-  observePage();
+  if (active) {
+    scanPage();
+    observePage();
+  }
 
   window.addEventListener("pagehide", stopObserving, { once: true });
   extensionApi.storage.onChanged.addListener(applyChangedSettings);
+
+  function isCampusEnabled(campusSettings) {
+    return campusSettings?.[campus.id]?.enabled ?? campus.defaultEnabled;
+  }
+
+  /** Lets the launcher say which features this campus does not have yet. */
+  function publishCampusState() {
+    const unavailable = ["grades", "ratings", "rankings"].filter((feature) => !features[feature] || !hasLookups);
+    globalThis.PROFCHECK_ACTIVE_CAMPUS = Object.freeze({
+      id: campus.id,
+      displayName: campus.displayName,
+      enabled: active,
+      unavailableFeatures: Object.freeze(unavailable),
+      note: unavailable.length ? `Grades & ratings not yet available for ${campus.displayName}` : ""
+    });
+    document.documentElement.dataset.profcheckCampus = campus.id;
+    document.dispatchEvent(new CustomEvent("profcheck:campus-state"));
+  }
 
   function observePage() {
     observer.observe(document.documentElement, { childList: true, characterData: true, subtree: true });
@@ -79,50 +117,184 @@
     return changedNodes.length > 0 && changedNodes.every((node) => node.matches?.(selector));
   }
 
+  function adapterContext() {
+    return {
+      parse: PARSE,
+      campus,
+      selectors: {
+        courseRow: config.courseRowSelector,
+        instructor: config.instructorSelector,
+        courseCode: config.courseCodeSelector
+      }
+    };
+  }
+
   function scanPage() {
-    pruneDetachedSections();
-    removeOrphanedHosts();
-    courseOverlays.forEach(({ overlay }, node) => {
-      if (!node.isConnected || !node.matches(config.courseCodeSelector)) {
-        overlay.remove();
-        courseOverlays.delete(node);
+    const found = readSections();
+    if (!found) {
+      clearAllOverlays();
+      return;
+    }
+
+    // Anything the adapter no longer reports, or now reports differently, is stale.
+    sectionsByAnchorNode.forEach((section, anchorNode) => {
+      const current = found.get(anchorNode);
+      if (!current || sectionIdentity(current) !== section.identity) {
+        dropSection(section);
       }
     });
+    removeOrphanedHosts();
+    reconcileCourseHeaders();
 
-    document.querySelectorAll(config.courseCodeSelector).forEach(processCourseNode);
-    document.querySelectorAll(config.instructorSelector).forEach(processInstructorNode);
-
-    // Rows without an instructor element still carry a "TBA"/"Staff" text cell.
-    document.querySelectorAll(config.courseRowSelector).forEach((row) => {
-      if (row.querySelector(config.instructorSelector)) {
-        return;
-      }
-
-      const placeholderNode = findPlaceholderInstructorNode(row);
-      if (placeholderNode) {
-        processInstructorNode(placeholderNode);
+    found.forEach((reported, anchorNode) => {
+      const section = sectionsByAnchorNode.get(anchorNode);
+      if (section) {
+        section.seats = reported.seats;
+        section.waitlisted = reported.waitlisted;
+      } else {
+        startSection(reported);
       }
     });
 
     rebuildRankings();
   }
 
-  function pruneDetachedSections() {
-    sectionsByAnchorNode.forEach((section, anchorNode) => {
-      if (anchorNode.isConnected
-        && normalizeWhitespace(anchorNode.textContent) === section.instructorText
-        && extractRowCourseCode(anchorNode) === section.courseCode) {
+  /**
+   * Runs the adapter and applies the shared output checks. Returns a Map of
+   * anchor → section, or null when the page should show nothing at all.
+   */
+  function readSections() {
+    let reported;
+    try {
+      reported = adapter.findSections(document, adapterContext());
+      if (!Array.isArray(reported)) throw new TypeError("findSections must return an array");
+    } catch (error) {
+      warnRejected(`adapter failed: ${error.message}`);
+      return null;
+    }
+
+    const accepted = new Map();
+    let rejected = 0;
+    reported.forEach((section) => {
+      if (isValidSection(section) && !accepted.has(section.anchor)) {
+        accepted.set(section.anchor, normalizeSection(section));
+      } else {
+        rejected += 1;
+      }
+    });
+
+    if (reported.length && rejected / reported.length > MAX_REJECTED_SHARE) {
+      warnRejected(`${rejected} of ${reported.length} sections failed checks`);
+      return null;
+    }
+
+    return accepted;
+  }
+
+  function warnRejected(reason) {
+    if (warnedAboutRejection) return;
+    warnedAboutRejection = true;
+    console.warn(`[ProfCheck:${campus.id}] Overlays hidden on this page: ${reason}`);
+  }
+
+  function isValidSection(section) {
+    if (!section || !(section.anchor instanceof Element) || !section.anchor.isConnected) return false;
+    if (section.row != null && !(section.row instanceof Element)) return false;
+    if (typeof section.unassigned !== "boolean") return false;
+    if (section.instructor != null && typeof section.instructor !== "string") return false;
+    if (!section.instructor && !section.unassigned) return false;
+    if (section.courseCode != null && typeof section.courseCode !== "string") return false;
+    if (section.waitlisted != null && typeof section.waitlisted !== "boolean") return false;
+    return section.seats == null || isValidSeats(section.seats);
+  }
+
+  function isValidSeats({ open, total } = {}) {
+    return Number.isInteger(open) && Number.isInteger(total)
+      && open >= 0 && total > 0 && open <= total;
+  }
+
+  function normalizeSection(section) {
+    return {
+      anchorNode: section.anchor,
+      row: section.row ?? null,
+      courseCode: section.courseCode || "",
+      professorName: section.unassigned ? "" : section.instructor,
+      isPlaceholder: section.unassigned,
+      instructorText: normalizeWhitespace(section.anchor.textContent),
+      seats: section.seats ?? null,
+      waitlisted: section.waitlisted ?? null
+    };
+  }
+
+  function sectionIdentity(section) {
+    return `${section.instructorText}\u0000${section.courseCode}\u0000${section.isPlaceholder}`;
+  }
+
+  function startSection(reported) {
+    const claimKey = reported.professorName.toLowerCase() || `tba::${reported.courseCode}`;
+    if (!claimInstructorInRow(reported, claimKey)) {
+      return;
+    }
+
+    const section = {
+      ...reported,
+      identity: sectionIdentity(reported),
+      claimKey,
+      hostNode: null,
+      result: null,
+      courseResult: null,
+      lookupSettled: !hasLookups
+    };
+
+    sectionsByAnchorNode.set(section.anchorNode, section);
+    getOrCreate(anchorNodesByCourseCode, section.courseCode, () => new Set()).add(section.anchorNode);
+
+    if (hasLookups) {
+      lookUp(section);
+    }
+  }
+
+  function dropSection(section) {
+    const claims = section.row && instructorClaimsByRow.get(section.row);
+    if (claims?.get(section.claimKey) === section.anchorNode) claims.delete(section.claimKey);
+    sectionsByAnchorNode.delete(section.anchorNode);
+    anchorNodesByCourseCode.get(section.courseCode)?.delete(section.anchorNode);
+    highlightRow(section, false);
+    section.hostNode?.remove();
+  }
+
+  async function lookUp(section) {
+    const { anchorNode, professorName, courseCode } = section;
+    try {
+      const response = professorName
+        ? await requestLookup(`professor::${professorName.toLowerCase()}::${courseCode}`, {
+          type: "LOOKUP_PROFESSOR",
+          payload: { professorName, courseCode }
+        })
+        : await requestLookup(`course::${courseCode}`, {
+          type: "LOOKUP_COURSE",
+          payload: { courseCode }
+        });
+
+      // The node can be replaced by a postback while the lookup is in flight.
+      if (sectionsByAnchorNode.get(anchorNode) !== section) {
         return;
       }
 
-      const claims = instructorClaimsByRow.get(anchorNode.closest(config.courseRowSelector));
-      const claimKey = section.professorName.toLowerCase() || `tba::${section.courseCode}`;
-      if (claims?.get(claimKey) === anchorNode) claims.delete(claimKey);
-      sectionsByAnchorNode.delete(anchorNode);
-      anchorNodesByCourseCode.get(section.courseCode)?.delete(anchorNode);
-      highlightRow(section, false);
-      section.hostNode?.remove();
-    });
+      section.lookupSettled = true;
+      if (response?.ok && response.result) {
+        if (professorName) {
+          section.result = response.result;
+        } else {
+          section.courseResult = response.result;
+        }
+        renderSectionAndBadge(section);
+      } else {
+        renderOverlay(section);
+      }
+    } catch (error) {
+      console.error("Unable to render section overlay", error);
+    }
   }
 
   /**
@@ -139,91 +311,34 @@
     });
   }
 
-  function processCourseNode(node) {
-    if (!isCourseHeaderNode(node)) {
-      return;
-    }
-
-    const courseCode = extractCourseCode(node.textContent);
-    const existing = courseOverlays.get(node);
-    if (config.showCougarGrades && courseCode
-      && existing?.courseCode === courseCode && existing.overlay.isConnected) return;
-    existing?.overlay.remove();
-    courseOverlays.delete(node);
-    if (config.showCougarGrades && courseCode) {
-      courseOverlays.set(node, { courseCode, overlay: renderCourseHeaderOverlay(node, courseCode) });
-    }
-  }
-
-  async function processInstructorNode(node) {
-    if (sectionsByAnchorNode.has(node)) {
-      return;
-    }
-
-    // instructorSelector matches on an id substring, so PeopleSoft's wrapper span
-    // matches alongside the name span inside it. The innermost node owns the
-    // chips; an ancestor would render them away from the name it describes.
-    if (node.querySelector(config.instructorSelector)) {
-      return;
-    }
-
-    // Only an explicit "TBA"/"Staff" cell is a placeholder; an unparseable name
-    // is just a cell we cannot use yet.
-    const isPlaceholder = isPlaceholderInstructor(node.textContent);
-    const professorName = isPlaceholder ? "" : extractProfessorName(node.textContent);
-    if (!isPlaceholder && !professorName) {
-      return;
-    }
-
-    const courseCode = extractRowCourseCode(node);
-    if (isPlaceholder && !courseCode) {
-      return;
-    }
-
-    if (!claimInstructorInRow(node, professorName.toLowerCase() || `tba::${courseCode}`)) {
-      return;
-    }
-
-    const section = {
-      anchorNode: node,
-      hostNode: null,
-      courseCode,
-      professorName,
-      instructorText: normalizeWhitespace(node.textContent),
-      result: null,
-      courseResult: null,
-      isPlaceholder
-    };
-
-    sectionsByAnchorNode.set(node, section);
-    getOrCreate(anchorNodesByCourseCode, courseCode, () => new Set()).add(node);
-
-    try {
-      const response = professorName
-        ? await requestLookup(`professor::${professorName.toLowerCase()}::${courseCode}`, {
-          type: "LOOKUP_PROFESSOR",
-          payload: { professorName, courseCode }
-        })
-        : await requestLookup(`course::${courseCode}`, {
-          type: "LOOKUP_COURSE",
-          payload: { courseCode }
-        });
-
-      // The node can be replaced by a postback while the lookup is in flight.
-      if (!response?.ok || !response.result || sectionsByAnchorNode.get(node) !== section) {
-        return;
+  function reconcileCourseHeaders() {
+    const showHeaders = hasGradeSource && features.grades && config.showCougarGrades
+      && typeof adapter.findCourseHeaders === "function";
+    let headers = [];
+    if (showHeaders) {
+      try {
+        headers = adapter.findCourseHeaders(document, adapterContext()) ?? [];
+      } catch (error) {
+        console.warn(`[ProfCheck:${campus.id}] Course headers skipped: ${error.message}`);
       }
-
-      if (professorName) {
-        section.result = response.result;
-      } else {
-        section.courseResult = response.result;
-      }
-
-      renderSectionAndBadge(section);
-    } catch (error) {
-      console.error("Unable to render section overlay", error);
     }
+
+    const current = new Map(headers
+      .filter((header) => header?.anchor instanceof Element && header.courseCode)
+      .map((header) => [header.anchor, header.courseCode]));
+
+    courseOverlays.forEach(({ courseCode, overlay }, node) => {
+      if (!node.isConnected || current.get(node) !== courseCode || !overlay.isConnected) {
+        overlay.remove();
+        courseOverlays.delete(node);
+      }
+    });
+
+    current.forEach((courseCode, node) => {
+      if (!courseOverlays.has(node)) {
+        courseOverlays.set(node, { courseCode, overlay: renderCourseHeaderOverlay(node, courseCode) });
+      }
+    });
   }
 
   function requestLookup(cacheKey, message) {
@@ -244,8 +359,7 @@
    * lists. A lecture and its lab name the same person, and repeating the figures
    * against each only adds height to a row that is already tight.
    */
-  function claimInstructorInRow(node, claimKey) {
-    const row = node.closest(config.courseRowSelector);
+  function claimInstructorInRow({ anchorNode, row }, claimKey) {
     if (!row) {
       return true;
     }
@@ -254,11 +368,11 @@
 
     // A claim held by a node the page has since replaced is stale, not a conflict.
     const holder = claims.get(claimKey);
-    if (holder && holder !== node && holder.isConnected) {
+    if (holder && holder !== anchorNode && holder.isConnected) {
       return false;
     }
 
-    claims.set(claimKey, node);
+    claims.set(claimKey, anchorNode);
     return true;
   }
 
@@ -303,7 +417,7 @@
 
   function updateBestProfessor(section) {
     const professorKey = getProfessorKey(section);
-    if (!professorKey || !section.courseCode || !section.result) {
+    if (!features.rankings || !professorKey || !section.courseCode || !section.result) {
       return;
     }
 
@@ -314,8 +428,8 @@
     ranking.professorKeys.add(professorKey);
 
     const score = computeScore({
-      rmp: config.showRmp ? section.result.rmp : null,
-      cougarGrades: config.showCougarGrades ? section.result.cougarGrades : null
+      rmp: config.showRmp && features.ratings ? section.result.rmp : null,
+      cougarGrades: config.showCougarGrades && features.grades ? section.result.cougarGrades : null
     }, SCORING_MODES[config.defaultScoringMode].weights);
     if (score == null) {
       return;
@@ -349,11 +463,11 @@
 
   function renderOverlay(section) {
     const hostNode = ensureOverlayHost(section);
-    const { result, courseResult } = section;
-    if (!hostNode || (!result && !courseResult)) {
+    if (!hostNode) {
       return;
     }
 
+    const { result, courseResult } = section;
     const overlay = document.createElement("div");
     overlay.className = "prof-overlay";
 
@@ -374,7 +488,7 @@
       }));
     }
 
-    if (config.showRmp && result?.rmp?.avgRating != null && result.rmp.numRatings > 0) {
+    if (features.ratings && config.showRmp && result?.rmp?.avgRating != null && result.rmp.numRatings > 0) {
       const ratingCount = result.rmp.numRatings;
       overlay.append(createChip({
         label: `Rating ${formatNumber(result.rmp.avgRating)}`,
@@ -384,16 +498,21 @@
       }));
     }
 
-    if (config.showCougarGrades) {
+    const searchChip = createRmpSearchChip(section);
+    if (searchChip) {
+      overlay.append(searchChip);
+    }
+
+    if (features.grades && hasGradeSource && config.showCougarGrades && (result || courseResult)) {
       overlay.append(...createCougarGradesChips(section));
     }
 
-    const seatChip = createSeatPressureChip(section);
+    const seatChip = features.seats ? createSeatChip(section) : null;
     if (seatChip) {
       overlay.append(seatChip);
     }
 
-    if (section.isPlaceholder && !result) {
+    if (section.isPlaceholder && !result && section.lookupSettled) {
       overlay.append(createChip({
         label: "Instructor TBA",
         title: "Instructor has not been assigned yet",
@@ -411,14 +530,14 @@
       key: "gpa",
       modifier: "cg",
       format: formatNumber,
-      instructor: ["GPA", "Students in this instructor\u2019s sections averaged this GPA"],
+      instructor: ["GPA", "Students in this instructor’s sections averaged this GPA"],
       course: ["Course GPA", "Average GPA across every instructor who teaches this course"]
     },
     {
       key: "dropRate",
       modifier: "cg-gold",
       format: formatPercent,
-      instructor: ["Drop Rate", "This share of students withdrew from this instructor\u2019s sections"],
+      instructor: ["Drop Rate", "This share of students withdrew from this instructor’s sections"],
       course: ["Course Drop Rate", "Share of students who withdraw from this course, across all instructors"]
     }
   ];
@@ -442,15 +561,39 @@
     });
 
     if (section.result && !instructorGrades && !section.isPlaceholder) {
+      const unreachable = Boolean(section.result.failed?.cougarGrades);
       chips.push(createChip({
-        label: "No CG Data",
-        title: "No CougarGrades instructor data was found for this professor",
+        label: unreachable ? "CG unavailable" : "No CG Data",
+        title: unreachable
+          ? "CougarGrades could not be reached. Reload the page later to try again."
+          : "No CougarGrades instructor data was found for this professor",
         href: section.courseCode ? courseCodeLink(section.courseCode) : "",
         modifier: "tba"
       }));
     }
 
     return chips;
+  }
+
+  /**
+   * A plain RMP search link when no rating is shown: the campus has no rating
+   * lookup, the lookup failed, or it found no match. Nothing is sent until the
+   * student clicks it.
+   */
+  function createRmpSearchChip(section) {
+    if (!features.ratingsLink || !config.showRmp || !section.professorName || !section.lookupSettled) {
+      return null;
+    }
+    const rmp = section.result?.rmp;
+    if (features.ratings && rmp?.avgRating != null && rmp.numRatings > 0) {
+      return null;
+    }
+    return createChip({
+      label: "Search RMP",
+      title: `Search RateMyProfessors for ${section.professorName}`,
+      href: CAMPUSES.rmpSearchUrl(campus, section.professorName),
+      modifier: "rmp-search"
+    });
   }
 
   /** Plain words, not the weighted arithmetic: the inputs are what students read. */
@@ -471,34 +614,41 @@
     return figures.join(", ");
   }
 
-  /** Quiet nudge only when seats are genuinely scarce; never a loud warning. */
-  function createSeatPressureChip(section) {
-    const row = section.anchorNode.closest(config.courseRowSelector);
-    if (!row) {
+  /**
+   * Quiet nudge only when seats are genuinely scarce; never a loud warning.
+   * Read from the page, so it shows before (and without) any lookup.
+   */
+  function createSeatChip(section) {
+    if (section.waitlisted) {
+      return createChip({
+        label: "Waitlist",
+        title: "This option is waitlisted",
+        href: "",
+        modifier: "seats"
+      });
+    }
+
+    if (!section.seats) {
       return null;
     }
 
-    let tightest = null;
-    for (const match of row.textContent.matchAll(OPEN_SEATS_PATTERN)) {
-      const openSeats = Number(match[1]);
-      const totalSeats = Number(match[2]);
-      if (totalSeats && (!tightest || openSeats < tightest.openSeats)) {
-        tightest = { openSeats, totalSeats };
-      }
+    const { open, total } = section.seats;
+    if (open === 0) {
+      return createChip({
+        label: "Full",
+        title: `No open seats remain in this option (0 of ${total})`,
+        href: "",
+        modifier: "seats"
+      });
     }
 
-    if (!tightest) {
-      return null;
-    }
-
-    const { openSeats, totalSeats } = tightest;
-    if (openSeats > SEAT_PRESSURE_MAX_OPEN && (openSeats / totalSeats) > SEAT_PRESSURE_MAX_RATIO) {
+    if (open > SEAT_PRESSURE_MAX_OPEN && (open / total) > SEAT_PRESSURE_MAX_RATIO) {
       return null;
     }
 
     return createChip({
-      label: openSeats === 1 ? "1 seat left" : `${openSeats} seats left`,
-      title: `${openSeats} of ${totalSeats} seats remain in this option`,
+      label: open === 1 ? "1 seat left" : `${open} seats left`,
+      title: `${open} of ${total} seats remain in this option`,
       href: "",
       modifier: "seats"
     });
@@ -546,7 +696,7 @@
     }
 
     const host = hostNode || createOverlayHost();
-    releaseHeightClamps(anchorNode);
+    releaseHeightClamps(section);
     anchorNode.insertAdjacentElement("afterend", host);
     section.hostNode = host;
     return host;
@@ -554,11 +704,10 @@
 
   /** The badge reads as the row's verdict, not as one more data pill. */
   function highlightRow(section, isBest) {
-    const row = section.anchorNode.closest(config.courseRowSelector);
+    const { row } = section;
     if (!row) return;
     const hasWinningInstructor = isBest || [...sectionsByAnchorNode.values()].some((other) =>
-      other !== section && other.result && isBestProfessor(other)
-      && other.anchorNode.closest(config.courseRowSelector) === row);
+      other !== section && other.result && other.row === row && isBestProfessor(other));
     row.classList.toggle("prof-overlay-best-row", hasWinningInstructor);
   }
 
@@ -568,8 +717,8 @@
    * Keeping the pinned height as a floor preserves the alignment while letting
    * the box grow when the chips genuinely need more room.
    */
-  function releaseHeightClamps(anchorNode) {
-    const row = anchorNode.closest(config.courseRowSelector);
+  function releaseHeightClamps({ anchorNode, row }) {
+    if (!row) return;
     for (let node = anchorNode.parentElement; node && node !== row; node = node.parentElement) {
       if (node.classList.contains("prof-overlay-unclamped")) {
         continue;
@@ -593,6 +742,21 @@
     event.stopPropagation();
   }
 
+  function clearAllOverlays() {
+    sectionsByAnchorNode.forEach((section) => {
+      section.row?.classList.remove("prof-overlay-best-row");
+      section.hostNode?.remove();
+    });
+    sectionsByAnchorNode.clear();
+    anchorNodesByCourseCode.clear();
+    rankingsByCourseCode.clear();
+    inFlightLookups.clear();
+    instructorClaimsByRow = new WeakMap();
+    courseOverlays.forEach(({ overlay }) => overlay.remove());
+    courseOverlays.clear();
+    document.querySelectorAll(".prof-overlay-host").forEach((host) => host.remove());
+  }
+
   function applyChangedSettings(changes, areaName) {
     if (areaName !== "sync") {
       return;
@@ -603,19 +767,29 @@
     });
     validateConfig();
 
+    if (changes.campuses) {
+      const nowActive = isCampusEnabled(changes.campuses.newValue);
+      if (nowActive !== active) {
+        active = nowActive;
+        publishCampusState();
+        stopObserving();
+        clearAllOverlays();
+        if (active) {
+          warnedAboutRejection = false;
+          scanPage();
+          observePage();
+        }
+        return;
+      }
+    }
+
+    if (!active) {
+      return;
+    }
+
     if (Object.keys(changes).some((key) => LOOKUP_SETTINGS.has(key))) {
       observer.disconnect();
-      sectionsByAnchorNode.forEach((section) => {
-        section.anchorNode.closest(config.courseRowSelector)?.classList.remove("prof-overlay-best-row");
-        section.hostNode?.remove();
-      });
-      sectionsByAnchorNode.clear();
-      anchorNodesByCourseCode.clear();
-      rankingsByCourseCode.clear();
-      inFlightLookups.clear();
-      instructorClaimsByRow = new WeakMap();
-      courseOverlays.forEach(({ overlay }) => overlay.remove());
-      courseOverlays.clear();
+      clearAllOverlays();
       scanPage();
       observePage();
       return;
@@ -634,7 +808,7 @@
     if (!SCORING_MODES[config.defaultScoringMode]) {
       config.defaultScoringMode = DEFAULT_CONFIG.defaultScoringMode;
     }
-    for (const key of ["courseRowSelector", "instructorSelector", "courseCodeSelector"]) {
+    for (const key of SELECTOR_KEYS) {
       try {
         if (typeof config[key] !== "string" || !config[key].trim()) throw new Error("Empty selector");
         document.querySelector(config[key]);
@@ -648,44 +822,7 @@
     return normalizeWhitespace(section.result?.name || section.professorName).toLowerCase();
   }
 
-
-  /** Innermost match wins: a nested cell is more specific than its container. */
-  function findPlaceholderInstructorNode(row) {
-    const candidates = row.querySelectorAll("td, span, div");
-    for (let index = candidates.length - 1; index >= 0; index -= 1) {
-      if (isPlaceholderInstructor(candidates[index].textContent)) {
-        return candidates[index];
-      }
-    }
-
-    return null;
-  }
-
-
-  /** Course-detail tables keep their single course header above the rows. */
-  function extractRowCourseCode(node) {
-    const row = node.closest(config.courseRowSelector);
-    const courseCodeNode = row?.querySelector(config.courseCodeSelector);
-    if (courseCodeNode) return extractCourseCode(courseCodeNode.textContent);
-    for (let parent = row?.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
-      const codes = new Set([...parent.querySelectorAll(config.courseCodeSelector)]
-        .filter(isCourseHeaderNode)
-        .map((header) => extractCourseCode(header.textContent)).filter(Boolean));
-      if (codes.size === 1) return [...codes][0];
-      if (codes.size > 1) break;
-    }
-    return "";
-  }
-
-
   function courseCodeLink(courseCode) {
     return `${config.cougarGradesBaseUrl}/c/${encodeURIComponent(courseCode)}`;
   }
-
-  function isCourseHeaderNode(node) {
-    return !node.closest("tr, table, [role='row'], .ps_grid-row");
-  }
-
-
-
 })();

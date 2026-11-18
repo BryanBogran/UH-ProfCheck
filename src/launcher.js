@@ -10,6 +10,18 @@
   const LAUNCHER_POSITION_KEY = "launcherPosition";
   const DRAG_THRESHOLD_PX = 4;
 
+  // The launcher only lives on a supported campus page. content.js publishes
+  // that campus's state (enabled, unavailable features, note) and fires
+  // "profcheck:campus-state" whenever it changes.
+  const campus = globalThis.PROFCHECK_CAMPUSES?.campusForUrl(globalThis.PROFCHECK_PAGE_URL ?? location.href);
+  if (!campus) {
+    return;
+  }
+  // dark.css and theme.js ship only in UH's static manifest entry.
+  const supportsDarkMode = campus.id === "uh";
+  let launcherNode = null;
+  document.addEventListener("profcheck:campus-state", applyCampusState);
+
   let activeMode = DEFAULT_MODE;
   let darkMode = false;
   const changedDuringStartup = new Set();
@@ -53,9 +65,13 @@
 
     const launcher = document.createElement("div");
     launcher.className = "profcheck-launcher";
+    // Hidden until content.js reports the campus as enabled.
+    launcher.hidden = true;
     launcher.append(panel, toggle);
     panel.append(buildPanelContent(panel, toggle));
     document.body.append(launcher);
+    launcherNode = launcher;
+    applyCampusState();
 
     const stored = await extensionApi.storage.local.get(LAUNCHER_POSITION_KEY);
     moveLauncher(launcher, stored[LAUNCHER_POSITION_KEY]);
@@ -75,7 +91,11 @@
         panel.hidden = !panel.hidden;
         toggle.setAttribute("aria-expanded", String(!panel.hidden));
         if (!panel.hidden) placePanel(launcher, panel);
-        if (!panel.hidden) panel.querySelector(".profcheck-panel__mode").focus();
+        if (!panel.hidden) {
+          const target = panel.querySelector(".profcheck-panel__modes:not([hidden]) .profcheck-panel__mode")
+            ?? firstPanelControl(panel);
+          target?.focus();
+        }
       }
     });
     launcher.addEventListener("keydown", (event) => {
@@ -85,14 +105,48 @@
         toggle.focus();
       }
     });
-    window.addEventListener("resize", () => moveLauncher(launcher, readLauncherRect(launcher)));
+    // A hidden launcher reads as 0,0; re-clamping it then would lose its position.
+    window.addEventListener("resize", () => {
+      if (!launcher.hidden) moveLauncher(launcher, readLauncherRect(launcher));
+    });
+  }
+
+  function applyCampusState() {
+    if (!launcherNode) {
+      return;
+    }
+    const state = globalThis.PROFCHECK_ACTIVE_CAMPUS;
+    const enabled = state?.id === campus.id && state.enabled === true;
+    const unavailable = enabled ? state.unavailableFeatures ?? [] : [];
+    const hasRankings = !unavailable.includes("rankings");
+
+    const panel = launcherNode.querySelector(".profcheck-panel");
+    const toggle = launcherNode.querySelector(".profcheck-launcher__toggle");
+    if (!enabled && !panel.hidden) {
+      panel.hidden = true;
+      toggle.setAttribute("aria-expanded", "false");
+    }
+    launcherNode.hidden = !enabled;
+
+    launcherNode.querySelector(".profcheck-panel__heading").textContent = hasRankings ? "Rank sections by" : "ProfCheck";
+    launcherNode.querySelector(".profcheck-panel__modes").hidden = !hasRankings;
+    launcherNode.querySelector(".profcheck-panel__note").textContent = enabled ? state.note ?? "" : "";
+  }
+
+  /** Keyboard focus target when the panel opens: a ranking mode, else the first control. */
+  function firstPanelControl(panel) {
+    return [...panel.querySelectorAll("button, input")].find((node) => !node.closest("[hidden]"));
   }
 
   function buildPanelContent(panel, toggle) {
     const content = document.createDocumentFragment();
 
     const heading = document.createElement("strong");
+    heading.className = "profcheck-panel__heading";
     heading.textContent = "Rank sections by";
+
+    const note = document.createElement("p");
+    note.className = "profcheck-panel__note";
 
     const collapse = document.createElement("button");
     collapse.type = "button";
@@ -154,8 +208,9 @@
       }
     });
     appearance.append(themeLabel, themeToggle);
+    appearance.hidden = !supportsDarkMode;
 
-    content.append(header, modes, appearance, status);
+    content.append(header, note, modes, appearance, status);
     return content;
   }
 

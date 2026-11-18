@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Browser fixture and adapter tests drive headless Chrome. With CI set,
+      # they fail instead of skipping when Chrome is missing.
+      - uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
+        with:
+          chrome-version: stable
+      - run: npm run check
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}

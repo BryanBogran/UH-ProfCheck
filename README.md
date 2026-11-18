@@ -4,4 +4,10 @@ Professor ratings, CougarGrades grade history, section recommendations, and opti
 
 See the [V2 documentation](docs/README.md) for features, local installation, tests, and release packaging, and the [privacy policy](docs/PRIVACY.md) for data handling.
 
+See the [ProfCheck brainstorm](docs/brainstorm.md) for decisions and ideas about supporting more schools.
+
 The extension is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/uh-profcheck/cgddcdnkcckjknijkaopgmhahbcdjjai).
+
+Want ProfCheck at your school? Read [CONTRIBUTING.md](CONTRIBUTING.md) and see [supported campuses](CAMPUSES.md).
+
+Founded by Bryan Bogran.

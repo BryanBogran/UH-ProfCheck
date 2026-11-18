@@ -1,67 +1,61 @@
-# UH ProfCheck 0.2.0 release check
+# UH ProfCheck 0.3.0 release check
 
-Reviewed October 6, 2026 in `Documents/UH ProfCheck/UH ProfCheck V2`, branch `v2`.
+Reviewed November 17, 2026 on branch `v2`, commit `814c427`. The previous release, 0.2.0, is live on the Chrome Web Store.
 
-The local Chrome release passes the checks below. No unresolved release-blocking code issue was found in the tested paths. Update or verify the hosted privacy policy before submitting. This review covers Chrome; Firefox has not been tested in a real Firefox browser.
+0.3.0 adds the groundwork for other campuses. UH is the only campus in this release, and no new data is sent anywhere.
 
-## Fixes made during review
+## What changed since 0.2.0
 
-- Page updates now replace stale instructor metrics, course links, recommendations, and seat notices. Removed rivals no longer leave a best-of-one badge.
-- Rows inherit the appropriate course header when UH does not repeat a course code in every row. Unknown-course rows are not grouped into misleading recommendations.
-- Data-source changes remove disabled data and fetch newly enabled sources immediately. Cache keys distinguish sources, university, strict search, and configured service URLs; cached results preserve the current requested course code.
-- An RMP candidate from a different university is no longer used as a fallback. Partial API failures preserve the source that succeeded; requests time out after 15 seconds.
-- Names support accented letters and curly apostrophes, preserve surnames containing placeholder words, and remove parenthetical roles. Compact course codes are normalized consistently.
-- Changed instructors release old row claims. A shared row remains highlighted when any of its instructors wins, and disabling rankings clears that highlight.
-- Launcher startup handles concurrent preference changes. Keyboard activation enters ranking controls; Escape closes and returns focus. Invalid saved positions and interrupted drags are handled safely. Ranking-save failures show a status message.
-- Options report save and cache-clear failures accurately. Manifest descriptions and feature/privacy documentation now match the implemented behavior.
+**Visible to students**
+- Seat notices render from the page right away, before rating and grade lookups finish, and also when those lookups fail.
+- 0 open seats reads "Full". Waitlisted sections read "Waitlist" when the page says so.
+- When no RMP rating can be shown (no match, or the service can't be reached), a "Search RMP" link opens RateMyProfessors' UH search (school 1109) for that instructor. It sends nothing until clicked.
+- A failed CougarGrades request reads "CG unavailable" instead of "No CG Data".
+- "Instructor TBA" also shows after a failed course lookup.
+- Settings has a Campuses section (UH on by default), an "Advanced (UH)" section holding the selector fields, and a "Founded by Bryan Bogran" footer.
+- Switching UH off removes overlays, the launcher, and lookups.
+
+**Behind the scenes**
+- UH parsing moved into `src/adapters/uh.js`, behind the adapter contract in `src/adapters/contract.md`.
+- The engine drops impossible adapter output: open seats greater than total, duplicates, or bad counts. It shows nothing on a page where more than half the sections fail these checks.
+- The background script only runs lookups for an enabled campus that is approved for that data source, and only from this extension's own content scripts.
+- Campus switches can request optional host access and register content scripts at runtime. This isn't used yet, because UH is static.
+- Offline, blocked, and timed-out lookups are logged at info level instead of appearing in the `chrome://extensions` Errors list.
 
 ## Validation
 
 | Check | Result |
 | --- | --- |
-| Node tests: background lookup/caching, parsing, scoring, theme preference/races | 31 passed, 0 failed |
-| Real extension scripts in Chrome with deterministic enrollment/API fixtures | 25 passed, 0 failed |
-| Runtime JavaScript syntax | 9 files passed |
-| Git whitespace/error check | Passed |
-| Chrome manifest, runtime resources, and local HTML links | Passed |
-| Upload ZIP root manifest and integrity | Passed |
+| `npm run check`: Node tests, headless-Chrome engine/regression pages, fixture scan, manifest check | 77 passed, 0 failed, 0 skipped |
+| Original 25 browser regression checks (`release-check.html`) | Passed unchanged after the refactor |
+| Live UH portal, installed unpacked | COSC 1336 and MATH 2414 behave as in 0.2.0. MATH 2414 shows 23 overlays and 10 Best Overall, and ranking modes switch |
+| Live UH portal with `api.cougargrades.io` blocked | Seat chips still render; "Search RMP" and "CG unavailable" shown; no entries in the Errors list |
+| Switch UH off, then on | Overlays and launcher removed, then restored |
+| Unrelated website | Nothing injected |
+| Upgrade from real 0.2.0 (built from commit `4a693aa`) to 0.3.0, unpacked in the same folder | Not disabled, and settings kept |
 
-The browser fixtures exercise dynamic instructor changes, independent course groups, TBA fallback, shared rows, ranking modes, source toggles, invalid selectors, low-seat updates, click propagation, keyboard semantics, theme changes, and API failure behavior. They use local API doubles and do not constitute live server tests.
-
-Manual installed-extension checks on the authenticated UH portal confirmed:
-
-- COSC 1336 displays real RMP, GPA, and withdrawal links for Jaspal Subhlok, with no best-of-one recommendation.
-- MATH 2414 displays 23 section overlays without duplicate lecture/lab chips and shows Best Overall/Top Pick recommendations. All three ranking controls update the displayed recommendations.
-- Dark mode switches immediately and survives course navigation. Space opens the launcher and focuses the controls; Escape closes it and returns focus.
-- The launcher image is loaded at its expected 32-pixel size. No ProfCheck errors were present in captured page console logs.
-
-Local manual checks also confirmed dark-mode propagation into a dialog iframe, settings validation/save, and preference persistence after reloading the settings page. API-cache clearing was checked through the options UI and independently against the real background handler in automated tests.
-
-After the final code changes, the user reloaded the extension again. A fresh portal navigation to Spring 2027 MATH 2414 confirmed 23 overlays, 23 rating chips, 10 Best Overall recommendations, one launcher, and saved dark mode. Space opened the controls and moved keyboard focus into the panel; Escape closed it and restored focus. The shared-row/claim edge cases were verified in the browser fixture. The browser tool cannot inspect Chrome's extension management page, so the installed folder/version was not independently verified there. Dark mode and Best Overall were restored to the original live preferences. No enrollment, cart, drop, or swap action was submitted.
+**Permissions:** 0.3.0 adds `scripting` and an empty `optional_host_permissions`. Neither carries a Chrome permission warning, so store users shouldn't see a prompt or have the extension disabled on update. Reloading an unpacked extension can't fully simulate the store's update prompt, so watch the dashboard and early reviews after publishing.
 
 ## Upload artifact
 
-`dist/UH-ProfCheck-0.2.0-chrome.zip`
+`dist/UH-ProfCheck-0.3.0-chrome.zip`
 
-- Version: **0.2.0**
-- 23 runtime files; 72,914 bytes
-- SHA-256: `96af6bee922bc013236c517ebb8fe62bfad0e874869037a1c4d2644f4b434f64`
-- Includes the Chrome manifest, runtime scripts/styles, icons, settings, and support/privacy pages.
-- Excludes Git files, tests, local previews, marketing assets, and the Firefox manifest.
+- Version: **0.3.0**
+- 27 runtime files; 83,105 bytes
+- SHA-256: `25065793bf680eeab938995b2678a07d7942d7598fb389e1083c294c6fb8e974`
+- Manifest: permissions `storage`, `scripting`; host permission `https://api.cougargrades.io/*`; content scripts on `https://saprd.my.uh.edu/*`; `optional_host_permissions: []`. The description is 112 characters.
+- Excludes tests, fixtures, `src/adapters/_template.js`, `src/adapters/example.js`, Git files, store assets, and the Firefox manifest.
 
-Rebuild after any subsequent runtime edits using `python3 scripts/package-release.py`.
+Rebuild after any runtime edit with `npm run package`.
 
-The [published listing](https://chromewebstore.google.com/detail/uh-profcheck/cgddcdnkcckjknijkaopgmhahbcdjjai) showed version 0.1.1 during review. Version 0.2.0 is higher, as required by [Chrome's upload instructions](https://developer.chrome.com/docs/webstore/prepare).
+## Store submission
 
-## Before submission
+**Permission justification for `scripting`:**
+> Starts ProfCheck on additional university enrollment portals only after the user turns that campus on in settings and grants access to that portal. No campus other than the University of Houston is included in this version.
 
-Make the hosted privacy policy linked from the store agree with `docs/PRIVACY.md` and `pages/privacy.html`. They now disclose course-code API requests, seat availability read locally, sync preferences, local launcher position, and session caching. The hosted policy URL could not be retrieved by the web tool, so its current contents were not verified. Chrome requires a current, accurate policy in its [privacy rules](https://developer.chrome.com/docs/webstore/program-policies/privacy).
+**Release notes (store "What's new" or support page):**
+> Seat notices now appear instantly, even when rating services are slow or down. Full sections say "Full". If a rating can't be loaded, a "Search RMP" link opens RateMyProfessors for that instructor. Settings has a new Campuses section, the first step toward supporting more universities.
 
-The release review did not publish or upload the extension to a store. Chrome Web Store acceptance remains subject to its review process.
+**Privacy:** data handling is unchanged from 0.2.0. The privacy page already covers RateMyProfessors links. Confirm the hosted policy still matches `pages/privacy.html`.
 
-## Evidence
-
-Local review captures are kept in the ignored `.preview/` folder; they are not included in Git or the upload ZIP:
-
-- `.preview/release-live-reloaded.png`: live UH course page after final reload.
-- `.preview/release-regressions.png`: passing browser regression checks.
+Firefox has not been tested in a real Firefox browser for this release.

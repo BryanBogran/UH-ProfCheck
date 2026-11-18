@@ -1,0 +1,8 @@
+[
+  { "anchor": "inst-1001", "row": "row-1001", "courseCode": "ESU 1301", "instructor": "Pat Example", "unassigned": false, "seats": { "open": 12, "total": 40 }, "waitlisted": false },
+  { "anchor": "inst-1002", "row": "row-1002", "courseCode": "ESU 1301", "instructor": "Robin Sample", "unassigned": false, "seats": { "open": 3, "total": 40 }, "waitlisted": false },
+  { "anchor": "inst-1003", "row": "row-1003", "courseCode": "ESU 1301", "instructor": null, "unassigned": true, "seats": { "open": 40, "total": 40 }, "waitlisted": false },
+  { "anchor": "inst-2001", "row": "row-2001", "courseCode": "ESU 2310", "instructor": "Casey Placeholder", "unassigned": false, "seats": null, "waitlisted": false },
+  { "anchor": "inst-2002", "row": "row-2002", "courseCode": "ESU 2310", "instructor": "Jordan Fictional", "unassigned": false, "seats": { "open": 0, "total": 35 }, "waitlisted": false },
+  { "anchor": "inst-2003", "row": "row-2003", "courseCode": "ESU 2310", "instructor": "Morgan Madeup", "unassigned": false, "seats": { "open": 0, "total": 35 }, "waitlisted": true }
+]

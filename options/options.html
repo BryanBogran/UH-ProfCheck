@@ -48,8 +48,19 @@
           </label>
         </section>
 
+        <section class="settings-group" aria-labelledby="campuses-heading">
+          <div class="settings-group__header">
+            <h2 id="campuses-heading">Campuses</h2>
+            <p>Turn on the enrollment portals ProfCheck should work on. Changes save right away; reload your portal tab afterward.</p>
+          </div>
+
+          <ul id="campus-list" class="campus-list"></ul>
+          <p id="campus-status" class="campus-status" aria-live="polite"></p>
+        </section>
+
         <details class="settings-group settings-group--advanced">
-          <summary>Advanced</summary>
+          <summary>Advanced (UH)</summary>
+          <p class="advanced-note">These settings only apply to the University of Houston portal.</p>
 
           <label>
             <span>University Name</span>
@@ -105,9 +116,13 @@
           <p id="status" class="status" aria-live="polite"></p>
         </div>
       </form>
+
+      <footer class="page-footer">Founded by Bryan Bogran</footer>
     </main>
 
     <script src="../src/config.js"></script>
+    <script src="../src/campuses.js"></script>
+    <script src="../src/campus-access.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

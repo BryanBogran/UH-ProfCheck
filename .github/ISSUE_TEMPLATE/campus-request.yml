@@ -1,0 +1,75 @@
+name: Campus request
+description: Ask to add support for your school's enrollment portal.
+title: "Campus request: <school>"
+labels: ["campus-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for offering to add your school. Read [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md) first.
+        **Don't post student IDs, school email addresses, screenshots of your account, or links that contain session values.**
+  - type: input
+    id: school
+    attributes:
+      label: School and campus
+      placeholder: Texas Tech University, main campus
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Course-search portal hostname
+      description: Only the hostname, not the full link. For UH it's saprd.my.uh.edu.
+      placeholder: registration.example.edu
+    validations:
+      required: true
+  - type: input
+    id: rmp
+    attributes:
+      label: RateMyProfessors school ID (optional)
+      description: Search your school on ratemyprofessors.com. The number at the end of its page link is the ID. For UH, ratemyprofessors.com/school/1109 gives 1109.
+      placeholder: "1109"
+  - type: input
+    id: handle
+    attributes:
+      label: Your GitHub handle
+      placeholder: "@your-handle"
+    validations:
+      required: true
+  - type: dropdown
+    id: access
+    attributes:
+      label: Can you open course search with your own student login?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: dropdown
+    id: maintain
+    attributes:
+      label: Can you keep testing after launch when the portal changes?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: second-tester
+    attributes:
+      label: Second tester's GitHub handle
+      description: Another student at your school who can test. Two testers are needed before a campus ships.
+      placeholder: "@their-handle, or 'not yet'"
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Portal platform if you know it (PeopleSoft, Banner, Workday...), or anything unusual about the page.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I will not post student data, login details, or unredacted screenshots in this repository.
+          required: true

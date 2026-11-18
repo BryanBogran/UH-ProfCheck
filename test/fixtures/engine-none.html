@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ProfCheck engine checks · unsupported page</title><link rel="stylesheet" href="../../src/content.css"></head>
+<body>
+<h1>Engine checks · page with no campus, and a campus disabled at load</h1>
+<p id="summary" role="status">Running…</p><ol id="checks"></ol>
+<table><tbody>
+  <tr id="u1"><td><span id="SSR_INSTR_LONG$0">Instructor Alpha</span></td><td>Open Seats 2 of 40</td></tr>
+</tbody></table>
+<script src="engine-stub.js" data-url="https://www.example.org/anything" data-lookups="ok"></script>
+<script src="../../src/config.js"></script>
+<script src="../../src/parse.js"></script>
+<script src="../../src/scoring.js"></script>
+<script src="../../src/campuses.js"></script>
+<script src="../../src/adapters/registry.js"></script>
+<script src="../../src/adapters/uh.js"></script>
+<script src="../../src/content.js"></script>
+<script src="../../src/launcher.js"></script>
+<script src="engine-checks.js"></script>
+<script>
+const T = window.ENGINE_TEST;
+runEngineChecks([
+  ["An unsupported page gets no launcher, overlays, or lookups", () => {
+    expect(!document.querySelector(".profcheck-launcher"), "Launcher injected on an unsupported page");
+    expect(!document.querySelector(".prof-overlay-host"), "Overlay injected on an unsupported page");
+    expect(T.calls.length === 0, `Sent ${T.calls.length} lookup(s)`);
+    expect(!document.documentElement.dataset.profcheckCampus, "Campus marker set on an unsupported page");
+  }],
+  ["No uncaught errors", () => expect(T.errors.length === 0, T.errors.join("\n"))]
+]);
+</script>
+</body></html>

@@ -126,6 +126,12 @@ a.prof-overlay__chip--best-tied:hover {
   background: var(--prof-red-soft);
 }
 
+/* Outlined: a search, not a rating. */
+.prof-overlay__chip--rmp-search {
+  border-style: dashed;
+  border-color: var(--prof-red);
+}
+
 .prof-overlay__chip--cg,
 .prof-overlay__chip--cg-gold,
 .prof-overlay__chip--cg-course {
@@ -296,6 +302,19 @@ a.prof-overlay__chip--best-tied:hover {
 
 .profcheck-panel__status:empty {
   display: none;
+}
+
+.profcheck-launcher[hidden],
+.profcheck-panel__modes[hidden],
+.profcheck-panel__appearance[hidden],
+.profcheck-panel__note:empty {
+  display: none;
+}
+
+.profcheck-panel__note {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .profcheck-panel__theme-toggle {

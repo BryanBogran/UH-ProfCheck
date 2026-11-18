@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ProfCheck engine checks · UH disabled at load</title><link rel="stylesheet" href="../../src/content.css"></head>
+<body>
+<h1>Engine checks · UH switched off before the page loads</h1>
+<p id="summary" role="status">Running…</p><ol id="checks"></ol>
+<table><tbody>
+  <tr id="u1"><td><span id="SSR_INSTR_LONG$0">Instructor Alpha</span></td><td>Open Seats 2 of 40</td></tr>
+</tbody></table>
+<script src="engine-stub.js" data-url="https://saprd.my.uh.edu/psc/fixture" data-lookups="ok" data-settings='{"campuses":{"uh":{"enabled":false}}}'></script>
+<script src="../../src/config.js"></script>
+<script src="../../src/parse.js"></script>
+<script src="../../src/scoring.js"></script>
+<script src="../../src/campuses.js"></script>
+<script src="../../src/adapters/registry.js"></script>
+<script src="../../src/adapters/uh.js"></script>
+<script src="../../src/content.js"></script>
+<script src="../../src/launcher.js"></script>
+<script src="engine-checks.js"></script>
+<script>
+const T = window.ENGINE_TEST;
+const q = (s) => document.querySelector(s);
+runEngineChecks([
+  ["A campus disabled at load shows no launcher or overlays", () => {
+    const launcher = q(".profcheck-launcher");
+    expect(!launcher || launcher.hidden, "Launcher visible while UH is disabled");
+    expect(!q(".prof-overlay-host"), "Overlay rendered while UH is disabled");
+    expect(T.calls.length === 0, `Sent ${T.calls.length} lookup(s)`);
+  }],
+  ["Enabling UH brings the launcher and overlays back", async ({ settle }) => {
+    await T.set({ campuses: { uh: { enabled: true } } });
+    await settle();
+    expect(q(".profcheck-launcher") && !q(".profcheck-launcher").hidden, "Launcher did not appear after enabling");
+    expect(q("#u1 .prof-overlay__chip--seats")?.textContent === "2 seats left", "Overlays did not appear after enabling");
+  }],
+  ["No uncaught errors", () => expect(T.errors.length === 0, T.errors.join("\n"))]
+]);
+</script>
+</body></html>

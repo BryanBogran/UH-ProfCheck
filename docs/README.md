@@ -55,3 +55,7 @@ Chrome requires the manifest at the ZIP root and a version higher than the previ
 - `pages/`: support, feedback, store reviews, and privacy.
 
 Only the `storage` permission and CougarGrades API host permission are requested. See [the privacy policy](PRIVACY.md) and [the in-extension privacy page](../pages/privacy.html) for the data handling disclosure. Update the hosted policy linked in the store before publishing this release.
+
+## Credits
+
+Founded by Bryan Bogran. Campus contributors are credited in [CAMPUSES.md](../CAMPUSES.md) and the release notes.

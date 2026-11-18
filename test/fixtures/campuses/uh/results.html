@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- Hand-built synthetic page shaped like UH's PeopleSoft class search.
+     Every name and number here is made up. -->
+<html lang="en"><head><meta charset="utf-8"><title>UH class search (synthetic)</title></head>
+<body>
+<div id="course-block">
+  <h2><span id="SSS_SUBJ_CATLG$0">MATH 2414</span> - Calculus II</h2>
+  <table>
+    <thead><tr><th>Option</th><th>Class</th><th>Instructor</th><th>Seats</th></tr></thead>
+    <tbody>
+      <!-- Plain row; the course code comes from the header above the table -->
+      <tr id="opt1"><td>1</td><td>Lecture - 10001</td>
+        <td><span id="SSR_INSTR_LONG$0">Avery Testperson (Primary Instructor)</span></td>
+        <td>Open Seats 18 of 40</td></tr>
+      <!-- PeopleSoft wraps the name span in a matching wrapper; lecture and lab
+           list the same instructor; the tighter lab count wins -->
+      <tr id="opt2"><td>2</td><td>Lecture - 10002<br>Lab - 10003</td>
+        <td><span id="win0divSSR_INSTR_LONG$1"><span id="SSR_INSTR_LONG$1">Riley Mockname</span></span>
+            <span id="win0divSSR_INSTR_LONG$2"><span id="SSR_INSTR_LONG$2">Riley Mockname</span></span></td>
+        <td>Open Seats 7 of 40<br>Open Seats 2 of 20</td></tr>
+      <!-- Unassigned instructor; a zero-capacity count is ignored -->
+      <tr id="opt3"><td>3</td><td>Lecture - 10004</td>
+        <td><span id="SSR_INSTR_LONG$3">To Be Announced</span></td>
+        <td>Open Seats 0 of 0<br>Open Seats 30 of 30</td></tr>
+      <!-- No instructor span at all, only a "Staff" cell -->
+      <tr id="opt4"><td>4</td><td>Lecture - 10005</td>
+        <td id="opt4-instructor">Staff</td>
+        <td>Open Seats 5 of 30</td></tr>
+      <!-- No seat text -->
+      <tr id="opt5"><td>5</td><td>Lecture - 10006</td>
+        <td><span id="SSR_INSTR_LONG$4">Quinn Sampleton</span></td>
+        <td>See department</td></tr>
+    </tbody>
+  </table>
+</div>
+<div id="unknown-block">
+  <!-- No course header anywhere above: course stays unknown, and an
+       unassigned row without a course is skipped -->
+  <table><tbody>
+    <tr id="opt6"><td><span data-instructor id="opt6-instructor">Drew Nobody</span></td><td>Open Seats 9 of 9</td></tr>
+    <tr id="opt7"><td><span data-instructor id="opt7-instructor">TBA</span></td><td>Open Seats 9 of 9</td></tr>
+  </tbody></table>
+</div>
+</body></html>

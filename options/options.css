@@ -163,6 +163,64 @@ select {
   outline-offset: 2px;
 }
 
+.campus-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.campus {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.campus__name {
+  font-weight: 700;
+}
+
+.campus__status {
+  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #d6b58e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.campus__status--paused {
+  color: #ffb3ad;
+}
+
+.campus__features {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #c9c3b8;
+  font-size: 13px;
+}
+
+.campus-status,
+.advanced-note {
+  margin: 0;
+  color: #c9c3b8;
+}
+
+.campus-status:empty {
+  display: none;
+}
+
+.page-footer {
+  margin-top: 18px;
+  color: #c9c3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
 .status {
   min-height: 1.5em;
   margin: 0;
