@@ -24,6 +24,12 @@ body:
     validations:
       required: true
   - type: input
+    id: rmp
+    attributes:
+      label: RateMyProfessors school ID (optional)
+      description: Search your school on ratemyprofessors.com. The number at the end of its page link is the ID. For UH, ratemyprofessors.com/school/1109 gives 1109.
+      placeholder: "1109"
+  - type: input
     id: handle
     attributes:
       label: Your GitHub handle

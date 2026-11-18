@@ -1,6 +1,6 @@
 // Test double for the engine checks. Configure with data attributes on the tag:
 //   data-url="https://host/path"   page URL the engine sees (picks the campus)
-//   data-lookups="ok|fail|hang"    how LOOKUP_* messages answer
+//   data-lookups="ok|fail|hang|unreachable|rated"  how LOOKUP_* messages answer
 //   data-settings='{"key":value}'  initial storage.sync contents
 // It never sends network requests.
 (() => {
@@ -39,6 +39,13 @@
         const mode = window.ENGINE_TEST.lookups;
         if (mode === "hang") return new Promise(() => {});
         if (mode === "fail") return Promise.resolve({ ok: false, error: "Simulated API outage" });
+        const professor = message.type === "LOOKUP_PROFESSOR";
+        if (mode === "unreachable" && professor) {
+          return Promise.resolve({ ok: true, result: { rmp: null, cougarGrades: null, failed: { rmp: true, cougarGrades: true } } });
+        }
+        if (mode === "rated" && professor) {
+          return Promise.resolve({ ok: true, result: { rmp: { avgRating: 4.2, numRatings: 12, link: "#rmp" }, cougarGrades: null } });
+        }
         return Promise.resolve({ ok: true, result: null });
       }
     }

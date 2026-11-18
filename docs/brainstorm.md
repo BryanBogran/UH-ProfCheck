@@ -21,6 +21,10 @@ Settled while reviewing the campus contributor program plan.
 - **Adapters only read the page.** They make no network requests. The shared code owns rendering, settings, permissions, and network access.
 - **Adapter contract additions:** a flag for which frames the adapter runs in, and an optional URL path check for portals that share a host. Dark mode stays UH-only.
 - **Show nothing rather than wrong data.** If an adapter's output fails basic checks (open seats greater than total, duplicate rows, zero rows on a results page), the overlay shows nothing on that page. There is no remote config. A broken campus is disabled by shipping a new version.
+- **RateMyProfessors for every campus (2026-11-17).**
+  - Any campus can show a "Search RMP" link built from the instructor's name and the campus's RMP school ID. It sends nothing until the student clicks, so pilot campuses still make no network requests of their own. UH shows it whenever a rating can't be shown. 0.3.0 also labels a failed CougarGrades request "CG unavailable" instead of "No CG Data".
+  - **Ratings for other campuses (0.4.0):** call RMP directly from the background script. `ratemyprofessors.com` is requested as an optional host permission when a student turns on that campus, never as a required permission, because a required one would disable ProfCheck for every existing user. The endpoint is unofficial and RMP's terms restrict automated access, so the search link stays as the fallback. The privacy page must say that instructor names are sent to RMP for these campuses.
+  - **UH stays on the CougarGrades RMP proxy,** so it needs no new permission. Emailing the CougarGrades maintainers about ProfCheck's traffic is deferred.
 - **Missing features are hidden.** Grades, ratings, and rankings are hidden for a campus without an approved data source, with one note in the panel. CougarGrades is used for UH only.
 - **One low-seat rule for all campuses,** the same threshold UH uses now, with tests for waitlisted and closed sections.
 

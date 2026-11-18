@@ -81,6 +81,7 @@ What a campus shows comes from its `features` and `dataSources` in `src/campuses
 
 - With `dataSources: []`, the engine sends **no lookups** and shows course, instructor, and seat information only.
 - Grades, ratings, and rankings are hidden unless the campus has an approved data source and the matching feature.
+- `ratingsLink` with `rmpSchoolId` shows a "Search RMP" link for each named instructor whenever no rating is shown. The link is built from the instructor's name, and nothing is sent until the student clicks it. Any campus can have it, including one with `dataSources: []`.
 
 ## Testing
 

@@ -498,6 +498,11 @@
       }));
     }
 
+    const searchChip = createRmpSearchChip(section);
+    if (searchChip) {
+      overlay.append(searchChip);
+    }
+
     if (features.grades && hasGradeSource && config.showCougarGrades && (result || courseResult)) {
       overlay.append(...createCougarGradesChips(section));
     }
@@ -556,15 +561,39 @@
     });
 
     if (section.result && !instructorGrades && !section.isPlaceholder) {
+      const unreachable = Boolean(section.result.failed?.cougarGrades);
       chips.push(createChip({
-        label: "No CG Data",
-        title: "No CougarGrades instructor data was found for this professor",
+        label: unreachable ? "CG unavailable" : "No CG Data",
+        title: unreachable
+          ? "CougarGrades could not be reached. Reload the page later to try again."
+          : "No CougarGrades instructor data was found for this professor",
         href: section.courseCode ? courseCodeLink(section.courseCode) : "",
         modifier: "tba"
       }));
     }
 
     return chips;
+  }
+
+  /**
+   * A plain RMP search link when no rating is shown: the campus has no rating
+   * lookup, the lookup failed, or it found no match. Nothing is sent until the
+   * student clicks it.
+   */
+  function createRmpSearchChip(section) {
+    if (!features.ratingsLink || !config.showRmp || !section.professorName || !section.lookupSettled) {
+      return null;
+    }
+    const rmp = section.result?.rmp;
+    if (features.ratings && rmp?.avgRating != null && rmp.numRatings > 0) {
+      return null;
+    }
+    return createChip({
+      label: "Search RMP",
+      title: `Search RateMyProfessors for ${section.professorName}`,
+      href: CAMPUSES.rmpSearchUrl(campus, section.professorName),
+      modifier: "rmp-search"
+    });
   }
 
   /** Plain words, not the weighted arithmetic: the inputs are what students read. */

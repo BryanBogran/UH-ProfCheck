@@ -126,6 +126,12 @@ a.prof-overlay__chip--best-tied:hover {
   background: var(--prof-red-soft);
 }
 
+/* Outlined: a search, not a rating. */
+.prof-overlay__chip--rmp-search {
+  border-style: dashed;
+  border-color: var(--prof-red);
+}
+
 .prof-overlay__chip--cg,
 .prof-overlay__chip--cg-gold,
 .prof-overlay__chip--cg-course {

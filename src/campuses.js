@@ -13,7 +13,10 @@
       // UH ships as a static manifest content script; other campuses are
       // registered at runtime after the user grants their optional host.
       staticScript: true,
-      features: Object.freeze({ seats: true, instructors: true, grades: true, ratings: true, rankings: true }),
+      // ratingsLink: an RMP search link built from the instructor name. It sends
+      // nothing until the student clicks, so any campus can have it.
+      features: Object.freeze({ seats: true, instructors: true, grades: true, ratings: true, ratingsLink: true, rankings: true }),
+      rmpSchoolId: "1109", // ratemyprofessors.com/school/1109
       dataSources: Object.freeze(["cougargrades", "rmp"])
     })
   ]);
@@ -62,6 +65,14 @@
     return CONTENT_SCRIPT_TEMPLATE.map((file) => (file === ADAPTER_SLOT ? `src/adapters/${campus.id}.js` : file));
   }
 
+  /** RMP professor search for this campus; all schools when the ID is unknown. */
+  function rmpSearchUrl(campus, instructorName) {
+    const path = campus?.rmpSchoolId ? `/search/professors/${encodeURIComponent(campus.rmpSchoolId)}` : "/search/professors";
+    const url = new URL(path, "https://www.ratemyprofessors.com");
+    url.searchParams.set("q", instructorName);
+    return url.toString();
+  }
+
   /** The optional host permission pattern a campus needs. */
   function originFor(campus) {
     return `https://${campus.host}/*`;
@@ -74,6 +85,7 @@
     defaultCampusSettings,
     contentScriptFilesFor,
     originFor,
+    rmpSearchUrl,
     contentStyles: CONTENT_STYLES
   });
 })(globalThis);

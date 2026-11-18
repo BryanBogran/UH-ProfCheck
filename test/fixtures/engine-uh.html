@@ -43,6 +43,25 @@ runEngineChecks([
     expect(q("#u1 .prof-overlay__chip--seats")?.textContent === "2 seats left", "Seat chip lost after outage");
     expect(q("#u4 .prof-overlay__chip--tba"), "TBA chip missing after failed lookup");
   }],
+  ["Unreachable services: RMP search link and 'CG unavailable', not 'No CG Data'", async ({ settle }) => {
+    T.lookups = "unreachable";
+    await T.set({ showCougarGrades: true });
+    await settle();
+    const link = q("#u1 .prof-overlay__chip--rmp-search");
+    expect(link, "Missing RMP search link");
+    expect(link.href === "https://www.ratemyprofessors.com/search/professors/1109?q=Instructor+Alpha", `Wrong search URL: ${link?.href}`);
+    expect(q("#u1").textContent.includes("CG unavailable") && !q("#u1").textContent.includes("No CG Data"), "Wrong CougarGrades label");
+    expect(!q("#u4 .prof-overlay__chip--rmp-search"), "TBA rows should not get a search link");
+  }],
+  ["No search link when the rating is shown, or when RMP is off", async ({ settle }) => {
+    T.lookups = "rated";
+    await T.set({ showRmp: false });
+    await settle();
+    expect(!q(".prof-overlay__chip--rmp-search"), "Search link shown with RMP turned off");
+    await T.set({ showRmp: true });
+    await settle();
+    expect(q("#u1 .prof-overlay__chip--rmp") && !q("#u1 .prof-overlay__chip--rmp-search"), "Search link shown next to a rating");
+  }],
   ["Seat notice appears when a refresh changes the count", async ({ settle }) => {
     q("#u3 .seats").textContent = "Open Seats 1 of 40";
     await settle();

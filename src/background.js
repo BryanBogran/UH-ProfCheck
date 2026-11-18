@@ -50,7 +50,7 @@ extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
     .then((campus) => handler(message.payload, campus))
     .then((result) => sendResponse({ ok: true, result }))
     .catch((error) => {
-      console.error(`Background handler failed for ${message.type}`, error);
+      logFailure(`Background handler failed for ${message.type}`, error);
       sendResponse({ ok: false, error: error.message });
     });
 
@@ -140,7 +140,9 @@ async function handleProfessorLookup(payload, campus) {
     name: professorName,
     courseCode,
     rmp: settledValue(rmp, "RMP"),
-    cougarGrades: settledValue(cougarGrades, "CougarGrades instructor")
+    cougarGrades: settledValue(cougarGrades, "CougarGrades instructor"),
+    // Lets the page tell "no record" apart from "service unreachable".
+    failed: { rmp: rmp.status === "rejected", cougarGrades: cougarGrades.status === "rejected" }
   };
 
   // A partial result is worth showing but not worth remembering.
@@ -191,8 +193,25 @@ function settledValue(settled, sourceName) {
     return settled.value;
   }
 
-  console.error(`${sourceName} lookup failed`, settled.reason);
+  logFailure(`${sourceName} lookup failed`, settled.reason);
   return null;
+}
+
+/**
+ * Offline, blocked, timed out, or a server error: normal outside our control,
+ * so it stays out of the red Errors list on chrome://extensions.
+ */
+function isServiceFailure(error) {
+  return error?.name === "TimeoutError" || error?.name === "AbortError" || error?.name === "ServiceError"
+    || (error?.name === "TypeError" && /fetch|network/i.test(error.message ?? ""));
+}
+
+function logFailure(context, error) {
+  if (isServiceFailure(error)) {
+    console.info(`${context}: ${error.message}`);
+  } else {
+    console.error(context, error);
+  }
 }
 
 async function loadConfig() {
@@ -205,7 +224,9 @@ async function loadConfig() {
 async function fetchJson(url) {
   const response = await fetch(url.toString(), { signal: AbortSignal.timeout(LOOKUP_TIMEOUT_MS) });
   if (!response.ok) {
-    throw new Error(`${url.pathname} failed with ${response.status}`);
+    const error = new Error(`${url.pathname} failed with ${response.status}`);
+    error.name = "ServiceError";
+    throw error;
   }
 
   return response.json();

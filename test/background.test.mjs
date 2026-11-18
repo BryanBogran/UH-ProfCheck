@@ -10,7 +10,7 @@ const UH_SENDER = { id: EXTENSION_ID, url: 'https://saprd.my.uh.edu/psc/saprd/EM
 const SETTINGS_SENDER = { id: EXTENSION_ID, url: `chrome-extension://${EXTENSION_ID}/options/options.html` };
 
 function startBackground({ config = {}, candidates, failRmp = false, failCg = false, firefox = false } = {}) {
-  const calls = [], session = {}, errors = [];
+  const calls = [], session = {}, errors = [], infos = [];
   let listener, installListener;
   const settings = { ...config };
   const api = {
@@ -28,11 +28,11 @@ function startBackground({ config = {}, candidates, failRmp = false, failCg = fa
   const context = vm.createContext({
     [firefox ? 'browser' : 'chrome']: api,
     URL, AbortSignal,
-    console: { error: (...args) => errors.push(args) },
+    console: { error: (...args) => errors.push(args), info: (...args) => infos.push(args) },
     fetch: async (url, options) => {
       calls.push({ url, options });
       const isRmp = url.includes('/external/rmp/');
-      if ((isRmp && failRmp) || (!isRmp && failCg)) throw new Error('Network unavailable');
+      if ((isRmp && failRmp) || (!isRmp && failCg)) throw new TypeError('Failed to fetch');
       const body = isRmp
         ? candidates ?? [{ school:{ name:'University of Houston' }, avgRatingRounded:4.2, numRatings:37, legacyId:321 }]
         : { meta:{ _id:'COSC 1336', fullNameLastNameFirst:'Subhlok, Jaspal' }, badges:[{key:'gpa',text:'3.08 GPA'},{key:'droprate',text:'10.31% W'}] };
@@ -42,7 +42,7 @@ function startBackground({ config = {}, candidates, failRmp = false, failCg = fa
   vm.runInContext(configSource, context);
   vm.runInContext(campusesSource, context);
   vm.runInContext(source, context);
-  return { calls, session, errors, settings,
+  return { calls, session, errors, infos, settings,
     install: () => installListener({ reason: 'update' }),
     send: (type, payload, sender = type === 'CLEAR_CACHE' ? SETTINGS_SENDER : UH_SENDER) => new Promise(resolve => {
       const keepAlive = listener({ type,payload }, sender, resolve);
@@ -77,6 +77,12 @@ test('a failing source preserves good data and is retried instead of cached', as
     assert.equal(reply.ok,true);
     assert.equal(Object.keys(b.session).length,0);
     assert.ok(failures.failRmp ? reply.result.cougarGrades : reply.result.rmp);
+    // "Unreachable" is reported separately from "no record".
+    assert.equal(reply.result.failed.rmp, Boolean(failures.failRmp));
+    assert.equal(reply.result.failed.cougarGrades, Boolean(failures.failCg));
+    // An outage is logged quietly, not as an extension error.
+    assert.equal(b.errors.length, 0);
+    assert.ok(b.infos.some(args => String(args[0]).includes('Failed to fetch')));
     await b.send('LOOKUP_PROFESSOR',professor);
     assert.equal(b.calls.length,4);
   }
