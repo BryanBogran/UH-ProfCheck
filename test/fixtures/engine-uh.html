@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ProfCheck engine checks · UH with lookups down</title><link rel="stylesheet" href="../../src/content.css"></head>
+<body>
+<h1>Engine checks · UH, lookups unavailable</h1>
+<p id="summary" role="status">Running…</p><ol id="checks"></ol>
+<div id="course"><h2><span id="SSS_SUBJ_CATLG$0">MATH 2414</span></h2>
+<table><tbody id="results">
+  <tr id="u1"><td><span id="SSR_INSTR_LONG$0">Instructor Alpha</span></td><td class="seats">Open Seats 2 of 40</td></tr>
+  <tr id="u2"><td><span id="SSR_INSTR_LONG$1">Instructor Beta</span></td><td class="seats">Open Seats 0 of 30</td></tr>
+  <tr id="u3"><td><span id="SSR_INSTR_LONG$2">Instructor Gamma</span></td><td class="seats">Open Seats 18 of 40</td></tr>
+  <tr id="u4"><td><span id="SSR_INSTR_LONG$3">To Be Announced</span></td><td class="seats">Open Seats 40 of 45</td></tr>
+</tbody></table></div>
+<script src="engine-stub.js" data-url="https://saprd.my.uh.edu/psc/fixture" data-lookups="hang"></script>
+<script src="../../src/config.js"></script>
+<script src="../../src/parse.js"></script>
+<script src="../../src/scoring.js"></script>
+<script src="../../src/campuses.js"></script>
+<script src="../../src/adapters/registry.js"></script>
+<script src="../../src/adapters/uh.js"></script>
+<script src="../../src/content.js"></script>
+<script src="../../src/launcher.js"></script>
+<script src="engine-checks.js"></script>
+<script>
+const T = window.ENGINE_TEST;
+const q = (s) => document.querySelector(s);
+const all = (s) => [...document.querySelectorAll(s)];
+runEngineChecks([
+  ["Seat notices render while lookups are still pending", () => {
+    expect(T.calls.length > 0, "UH should still request lookups");
+    expect(q("#u1 .prof-overlay__chip--seats")?.textContent === "2 seats left", "Missing scarce-seat chip");
+    expect(q("#u2 .prof-overlay__chip--seats")?.textContent === "Full", "Missing Full chip");
+    expect(!q("#u3 .prof-overlay__chip--seats"), "Plenty of seats should stay quiet");
+  }],
+  ["No rating or grade chips without lookup results", () => {
+    expect(!q(".prof-overlay__chip--rmp") && !q(".prof-overlay__chip--cg"), "Unexpected data chips");
+  }],
+  ["Instructor TBA waits for the lookup to settle", () => {
+    expect(!q("#u4 .prof-overlay__chip--tba"), "TBA chip shown before the lookup settled");
+  }],
+  ["Failed lookups keep seat notices and show TBA", async ({ settle }) => {
+    T.lookups = "fail";
+    await T.set({ showRmp: true });
+    await settle();
+    expect(q("#u1 .prof-overlay__chip--seats")?.textContent === "2 seats left", "Seat chip lost after outage");
+    expect(q("#u4 .prof-overlay__chip--tba"), "TBA chip missing after failed lookup");
+  }],
+  ["Seat notice appears when a refresh changes the count", async ({ settle }) => {
+    q("#u3 .seats").textContent = "Open Seats 1 of 40";
+    await settle();
+    expect(q("#u3 .prof-overlay__chip--seats")?.textContent === "1 seat left", "Seat chip did not update");
+  }],
+  ["Replaced results leave no stale overlays", async ({ settle }) => {
+    q("#results").innerHTML = '<tr id="n1"><td><span id="SSR_INSTR_LONG$9">Instructor Delta</span></td><td>Open Seats 3 of 25</td></tr>';
+    await settle();
+    expect(all(".prof-overlay-host").length === 1, `Expected 1 overlay host, found ${all(".prof-overlay-host").length}`);
+    expect(q("#n1 .prof-overlay__chip--seats")?.textContent === "3 seats left", "New row missing seat chip");
+  }],
+  ["The launcher shows ranking controls and dark mode on UH, with no note", () => {
+    const launcher = q(".profcheck-launcher");
+    expect(launcher && !launcher.hidden, "Launcher missing or hidden on UH");
+    expect(all(".profcheck-panel__mode").length > 0 && !q(".profcheck-panel__modes").hidden, "Ranking controls missing");
+    expect(!q(".profcheck-panel__appearance").hidden, "Dark mode toggle hidden on UH");
+    expect(q(".profcheck-panel__note").textContent === "", "Unexpected campus note on UH");
+  }],
+  ["Turning UH off hides the launcher; turning it on restores it", async ({ settle }) => {
+    q(".profcheck-launcher__toggle").click();
+    await T.set({ campuses: { uh: { enabled: false } } });
+    await settle();
+    expect(q(".profcheck-launcher").hidden, "Launcher still visible after disabling UH");
+    expect(q(".profcheck-panel").hidden, "Panel left open after disabling UH");
+    await T.set({ campuses: { uh: { enabled: true } } });
+    await settle();
+    expect(!q(".profcheck-launcher").hidden, "Launcher did not return after enabling UH");
+    expect(all(".profcheck-launcher").length === 1, "Launcher was duplicated");
+  }],
+  ["No uncaught errors", () => expect(T.errors.length === 0, T.errors.join("\n"))]
+]);
+</script>
+</body></html>

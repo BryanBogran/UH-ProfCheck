@@ -6,6 +6,7 @@ import json
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
+DEV_ONLY_FILES = {'src/adapters/_template.js', 'src/adapters/example.js'}
 
 def main():
     manifest = json.loads((ROOT / 'manifest.json').read_text())
@@ -19,6 +20,8 @@ def main():
     files = [ROOT / 'manifest.json']
     for directory in ['src', 'icons', 'options', 'pages']:
         files.extend(p for p in (ROOT / directory).rglob('*') if p.is_file() and p.suffix in {'.js', '.css', '.html', '.png'})
+    # Contributor scaffolding lives beside real adapters but never ships.
+    files = [p for p in files if p.relative_to(ROOT).as_posix() not in DEV_ONLY_FILES]
     included = {p.relative_to(ROOT).as_posix() for p in files}
     required = list(manifest['icons'].values()) + [manifest['background']['service_worker'], manifest['options_page']]
     for script in manifest['content_scripts']:

@@ -298,6 +298,19 @@ a.prof-overlay__chip--best-tied:hover {
   display: none;
 }
 
+.profcheck-launcher[hidden],
+.profcheck-panel__modes[hidden],
+.profcheck-panel__appearance[hidden],
+.profcheck-panel__note:empty {
+  display: none;
+}
+
+.profcheck-panel__note {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .profcheck-panel__theme-toggle {
   appearance: none;
   flex: 0 0 38px;

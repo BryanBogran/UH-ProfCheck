@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributor guide
+    url: https://github.com/BryanBogran/UH-ProfCheck/blob/main/CONTRIBUTING.md
+    about: Read this before requesting a campus or opening a pull request.

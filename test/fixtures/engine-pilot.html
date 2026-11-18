@@ -1,0 +1,118 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>ProfCheck engine checks · campus without data sources</title><link rel="stylesheet" href="../../src/content.css"></head>
+<body>
+<h1>Engine checks · pilot-style campus (no data sources)</h1>
+<p id="summary" role="status">Running…</p><ol id="checks"></ol>
+<table class="esu-results"><tbody id="results">
+  <tr class="esu-section" id="row-1001" data-section="1001"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Pat Example</span></td><td class="esu-seats">12/40</td><td class="esu-status">Open</td></tr>
+  <tr class="esu-section" id="row-1002" data-section="1002"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Robin Sample</span></td><td class="esu-seats">3/40</td><td class="esu-status">Open</td></tr>
+  <tr class="esu-section" id="row-1003" data-section="1003"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">TBA</span></td><td class="esu-seats">40/40</td><td class="esu-status">Open</td></tr>
+  <tr class="esu-section" id="row-1001-dup" data-section="1001"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Pat Example</span></td><td class="esu-seats">12/40</td><td class="esu-status">Open</td></tr>
+  <tr class="esu-section" id="row-2001" data-section="2001"><td class="esu-course">ESU 2310</td><td><span class="esu-instructor">Casey Placeholder</span></td><td class="esu-seats">12 of</td><td class="esu-status">Open</td></tr>
+  <tr class="esu-section" id="row-2002" data-section="2002"><td class="esu-course">ESU 2310</td><td><span class="esu-instructor">Jordan Fictional</span></td><td class="esu-seats">0/35</td><td class="esu-status">Closed</td></tr>
+  <tr class="esu-section" id="row-2003" data-section="2003"><td class="esu-course">ESU 2310</td><td><span class="esu-instructor">Morgan Madeup</span></td><td class="esu-seats">0/35</td><td class="esu-status">Waitlist</td></tr>
+</tbody></table>
+<script src="engine-stub.js" data-url="https://classes.example.edu/search" data-lookups="ok" data-settings='{"campuses":{"uh":{"enabled":true},"example":{"enabled":true}}}'></script>
+<script src="../../src/config.js"></script>
+<script src="../../src/parse.js"></script>
+<script src="../../src/scoring.js"></script>
+<script src="../../src/campuses.js"></script>
+<script>
+// Adds the fake campus to the registry the way a real pilot entry would look.
+(() => {
+  const base = globalThis.PROFCHECK_CAMPUSES;
+  const example = Object.freeze({
+    id: "example", displayName: "Example State University", host: "classes.example.edu",
+    pathPattern: null, allFrames: false, status: "beta", defaultEnabled: false, staticScript: false,
+    features: { seats: true, instructors: true, grades: false, ratings: false, rankings: false },
+    dataSources: []
+  });
+  globalThis.PROFCHECK_CAMPUSES = {
+    list: [...base.list, example],
+    byId: (id) => (id === "example" ? example : base.byId(id)),
+    campusForUrl: (url) => (new URL(url).hostname === example.host ? example : base.campusForUrl(url)),
+    defaultCampusSettings: () => ({ ...base.defaultCampusSettings(), example: { enabled: false } })
+  };
+})();
+</script>
+<script src="../../src/adapters/registry.js"></script>
+<script src="../../src/adapters/uh.js"></script>
+<script src="../../src/adapters/example.js"></script>
+<script src="../../src/content.js"></script>
+<script src="../../src/launcher.js"></script>
+<script src="engine-checks.js"></script>
+<script>
+const T = window.ENGINE_TEST;
+const q = (s) => document.querySelector(s);
+const all = (s) => [...document.querySelectorAll(s)];
+const seatText = (id) => q(`#${id} .prof-overlay__chip--seats`)?.textContent ?? null;
+const VALID_ROWS = q("#results").innerHTML;
+runEngineChecks([
+  ["The example adapter is chosen from the page URL", () => {
+    expect(document.documentElement.dataset.profcheckCampus === "example", "Wrong campus selected");
+  }],
+  ["A campus without data sources sends no lookups", () => {
+    expect(T.calls.length === 0, `Sent ${T.calls.length} lookup(s)`);
+  }],
+  ["Seat notices come straight from the page", () => {
+    expect(seatText("row-1002") === "3 seats left", `row-1002: ${seatText("row-1002")}`);
+    expect(seatText("row-2002") === "Full", `row-2002: ${seatText("row-2002")}`);
+    expect(seatText("row-2003") === "Waitlist", `row-2003: ${seatText("row-2003")}`);
+    expect(seatText("row-1001") === null && seatText("row-1003") === null, "Roomy sections should stay quiet");
+    expect(seatText("row-2001") === null, "Unknown seats must not show a notice");
+  }],
+  ["Grades, ratings, rankings, and course links stay hidden", () => {
+    expect(!q(".prof-overlay__chip--rmp, .prof-overlay__chip--cg, .prof-overlay__chip--best, .prof-overlay--course-header"), "Unavailable features rendered");
+    expect(globalThis.PROFCHECK_ACTIVE_CAMPUS.note.includes("Example State University"), "Missing unavailable-features note");
+  }],
+  ["The launcher shows the campus note without ranking or dark mode controls", () => {
+    const launcher = q(".profcheck-launcher");
+    expect(launcher && !launcher.hidden, "Launcher missing or hidden on an enabled campus");
+    const note = q(".profcheck-panel__note")?.textContent ?? "";
+    expect(note === "Grades & ratings not yet available for Example State University", `Note: "${note}"`);
+    expect(q(".profcheck-panel__modes").hidden, "Ranking controls shown without rankings");
+    expect(q(".profcheck-panel__appearance").hidden, "Dark mode toggle shown off UH");
+    expect(q(".profcheck-panel__heading").textContent === "ProfCheck", "Heading still offers rankings");
+  }],
+  ["A repeated section is shown once", () => {
+    expect(!q("#row-1001-dup .prof-overlay-host"), "Duplicate row got an overlay");
+  }],
+  ["A seat count changed by a refresh updates the notice", async ({ settle }) => {
+    q("#row-1001 .esu-seats").textContent = "1/40";
+    await settle();
+    expect(seatText("row-1001") === "1 seat left", `row-1001: ${seatText("row-1001")}`);
+  }],
+  ["When most sections fail checks, the page shows nothing", async ({ settle }) => {
+    q("#results").innerHTML = [
+      '<tr class="esu-section" id="bad-1" data-section="9001"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Pat Example</span></td><td class="esu-seats">50/40</td><td class="esu-status">Open</td></tr>',
+      '<tr class="esu-section" id="bad-2" data-section="9002"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Robin Sample</span></td><td class="esu-seats">60/40</td><td class="esu-status">Open</td></tr>',
+      '<tr class="esu-section" id="ok-1" data-section="9003"><td class="esu-course">ESU 1301</td><td><span class="esu-instructor">Casey Placeholder</span></td><td class="esu-seats">2/40</td><td class="esu-status">Open</td></tr>'
+    ].join("");
+    await settle();
+    expect(all(".prof-overlay-host").length === 0, "Overlays shown despite failed checks");
+    expect(T.warnings.some((w) => w.startsWith("[ProfCheck:example]")), "No tagged warning logged");
+  }],
+  ["Overlays return once the page reads cleanly again", async ({ settle }) => {
+    q("#results").innerHTML = VALID_ROWS;
+    await settle();
+    expect(seatText("row-2002") === "Full", "Valid rows did not render again");
+  }],
+  ["Turning the campus off removes overlays; turning it on restores them", async ({ settle }) => {
+    await T.set({ campuses: { uh: { enabled: true }, example: { enabled: false } } });
+    await settle();
+    expect(all(".prof-overlay-host").length === 0, "Overlays remained after disabling");
+    q("#row-1002 .esu-seats").textContent = "2/40";
+    await settle();
+    expect(all(".prof-overlay-host").length === 0, "Disabled campus reacted to page changes");
+    expect(q(".profcheck-launcher").hidden, "Launcher visible on a disabled campus");
+    await T.set({ campuses: { uh: { enabled: true }, example: { enabled: true } } });
+    await settle();
+    expect(seatText("row-1002") === "2 seats left", "Overlays did not return after enabling");
+    expect(!q(".profcheck-launcher").hidden, "Launcher did not return after enabling");
+  }],
+  ["Still no lookups and no errors", () => {
+    expect(T.calls.length === 0, `Sent ${T.calls.length} lookup(s)`);
+    expect(T.errors.length === 0, T.errors.join("\n"));
+  }]
+]);
+</script>
+</body></html>

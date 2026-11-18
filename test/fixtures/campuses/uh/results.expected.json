@@ -1,0 +1,9 @@
+[
+  { "anchor": "SSR_INSTR_LONG$0", "row": "opt1", "courseCode": "MATH 2414", "instructor": "Avery Testperson", "unassigned": false, "seats": { "open": 18, "total": 40 }, "waitlisted": null },
+  { "anchor": "SSR_INSTR_LONG$1", "row": "opt2", "courseCode": "MATH 2414", "instructor": "Riley Mockname", "unassigned": false, "seats": { "open": 2, "total": 20 }, "waitlisted": null },
+  { "anchor": "SSR_INSTR_LONG$2", "row": "opt2", "courseCode": "MATH 2414", "instructor": "Riley Mockname", "unassigned": false, "seats": { "open": 2, "total": 20 }, "waitlisted": null },
+  { "anchor": "SSR_INSTR_LONG$3", "row": "opt3", "courseCode": "MATH 2414", "instructor": null, "unassigned": true, "seats": { "open": 30, "total": 30 }, "waitlisted": null },
+  { "anchor": "SSR_INSTR_LONG$4", "row": "opt5", "courseCode": "MATH 2414", "instructor": "Quinn Sampleton", "unassigned": false, "seats": null, "waitlisted": null },
+  { "anchor": "opt6-instructor", "row": "opt6", "courseCode": null, "instructor": "Drew Nobody", "unassigned": false, "seats": { "open": 9, "total": 9 }, "waitlisted": null },
+  { "anchor": "opt4-instructor", "row": "opt4", "courseCode": "MATH 2414", "instructor": null, "unassigned": true, "seats": { "open": 5, "total": 30 }, "waitlisted": null }
+]

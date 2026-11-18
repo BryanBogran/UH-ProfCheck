@@ -7,3 +7,7 @@ See the [V2 documentation](docs/README.md) for features, local installation, tes
 See the [ProfCheck brainstorm](docs/brainstorm.md) for decisions and ideas about supporting more schools.
 
 The extension is available on the [Chrome Web Store](https://chromewebstore.google.com/detail/uh-profcheck/cgddcdnkcckjknijkaopgmhahbcdjjai).
+
+Want ProfCheck at your school? Read [CONTRIBUTING.md](CONTRIBUTING.md) and see [supported campuses](CAMPUSES.md).
+
+Founded by Bryan Bogran.

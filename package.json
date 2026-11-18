@@ -1,0 +1,12 @@
+{
+  "name": "profcheck",
+  "private": true,
+  "description": "ProfCheck browser extension. No runtime dependencies; scripts only.",
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\"",
+    "scan": "node scripts/scan-fixtures.mjs",
+    "check:manifest": "node scripts/check-manifests.mjs",
+    "check": "npm run test && npm run scan && npm run check:manifest",
+    "package": "python3 scripts/package-release.py"
+  }
+}

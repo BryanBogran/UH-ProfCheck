@@ -1,8 +1,9 @@
 // Chrome loads a single service-worker file; Firefox lists both in the manifest.
-globalThis.importScripts?.("config.js");
+globalThis.importScripts?.("config.js", "campuses.js", "campus-access.js");
 
 const extensionApi = globalThis.browser ?? globalThis.chrome;
 const DEFAULT_CONFIG = globalThis.PROFCHECK_DEFAULTS;
+const CAMPUSES = globalThis.PROFCHECK_CAMPUSES;
 const COURSE_CODE_PATTERN = /\b([A-Z]{2,5}\s?\d{4})\b/;
 const LOOKUP_TIMEOUT_MS = 15000;
 
@@ -12,10 +13,32 @@ const MESSAGE_HANDLERS = {
   CLEAR_CACHE: clearLookupCache
 };
 
+// Fills in missing settings only; a value the user already has is never replaced.
 extensionApi.runtime.onInstalled.addListener(async () => {
-  const stored = await extensionApi.storage.sync.get(Object.keys(DEFAULT_CONFIG));
-  await extensionApi.storage.sync.set({ ...DEFAULT_CONFIG, ...stored });
+  const stored = await extensionApi.storage.sync.get([...Object.keys(DEFAULT_CONFIG), "campuses"]);
+  await extensionApi.storage.sync.set({
+    ...DEFAULT_CONFIG,
+    ...stored,
+    campuses: mergeCampusSettings(stored.campuses)
+  });
+  await reconcileCampusAccess();
 });
+
+extensionApi.runtime.onStartup?.addListener(reconcileCampusAccess);
+
+extensionApi.permissions?.onRemoved?.addListener((removed) => {
+  globalThis.PROFCHECK_CAMPUS_ACCESS.handlePermissionsRemoved(extensionApi, CAMPUSES, removed)
+    .catch((error) => console.error("Could not turn off a campus after access was removed", error));
+});
+
+/** Registered campus scripts must match settings and granted hosts after every restart. */
+async function reconcileCampusAccess() {
+  try {
+    await globalThis.PROFCHECK_CAMPUS_ACCESS?.reconcileCampusAccess(extensionApi, CAMPUSES);
+  } catch (error) {
+    console.error("Could not reconcile campus access", error);
+  }
+}
 
 extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const handler = MESSAGE_HANDLERS[message?.type];
@@ -23,7 +46,8 @@ extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  handler(message.payload)
+  authorizeMessage(message.type, sender)
+    .then((campus) => handler(message.payload, campus))
     .then((result) => sendResponse({ ok: true, result }))
     .catch((error) => {
       console.error(`Background handler failed for ${message.type}`, error);
@@ -33,8 +57,62 @@ extensionApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-async function handleProfessorLookup(payload) {
-  const config = await loadConfig();
+/**
+ * Lookups only run for content scripts on an enabled campus whose adapter lists
+ * the data source; the cache can only be cleared from the extension's own pages.
+ * Resolves with the sender's campus, or rejects before any network request.
+ */
+async function authorizeMessage(type, sender) {
+  if (!sender || sender.id !== extensionApi.runtime.id) {
+    throw new Error("Message rejected: unknown sender.");
+  }
+
+  if (type === "CLEAR_CACHE") {
+    if (!String(sender.url ?? "").startsWith(extensionApi.runtime.getURL(""))) {
+      throw new Error("Message rejected: cache can only be cleared from settings.");
+    }
+    return null;
+  }
+
+  const campus = CAMPUSES.campusForUrl(sender.url ?? sender.tab?.url ?? "");
+  if (!campus) {
+    throw new Error("Message rejected: page is not a supported campus portal.");
+  }
+
+  const { campuses } = await extensionApi.storage.sync.get("campuses");
+  if (!mergeCampusSettings(campuses)[campus.id]?.enabled) {
+    throw new Error(`Message rejected: ${campus.id} is turned off.`);
+  }
+
+  const neededSources = type === "LOOKUP_COURSE" ? ["cougargrades"] : ["rmp", "cougargrades"];
+  if (!neededSources.some((source) => campus.dataSources.includes(source))) {
+    throw new Error(`Message rejected: ${campus.id} has no approved data source for this lookup.`);
+  }
+
+  return campus;
+}
+
+function mergeCampusSettings(stored) {
+  const merged = CAMPUSES.defaultCampusSettings();
+  if (stored && typeof stored === "object") {
+    for (const [id, value] of Object.entries(stored)) {
+      merged[id] = { ...merged[id], ...value };
+    }
+  }
+  return merged;
+}
+
+/** A source runs only when the user enabled it and the campus is approved for it. */
+function allowedConfig(config, campus) {
+  return {
+    ...config,
+    showRmp: config.showRmp && campus.dataSources.includes("rmp"),
+    showCougarGrades: config.showCougarGrades && campus.dataSources.includes("cougargrades")
+  };
+}
+
+async function handleProfessorLookup(payload, campus) {
+  const config = allowedConfig(await loadConfig(), campus);
   const professorName = normalizeName(payload?.professorName);
   if (!professorName) {
     return null;
@@ -73,8 +151,8 @@ async function handleProfessorLookup(payload) {
   return result;
 }
 
-async function handleCourseLookup(payload) {
-  const config = await loadConfig();
+async function handleCourseLookup(payload, campus) {
+  const config = allowedConfig(await loadConfig(), campus);
   const courseCode = normalizeCourseCode(payload?.courseCode);
   if (!courseCode || !config.showCougarGrades) {
     return null;

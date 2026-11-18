@@ -3,18 +3,27 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 const configSource = await readFile(new URL('../src/config.js', import.meta.url), 'utf8');
+const campusesSource = await readFile(new URL('../src/campuses.js', import.meta.url), 'utf8');
 const source = await readFile(new URL('../src/background.js', import.meta.url), 'utf8');
+const EXTENSION_ID = 'profcheck-test';
+const UH_SENDER = { id: EXTENSION_ID, url: 'https://saprd.my.uh.edu/psc/saprd/EMPLOYEE/SA/c/SSR_STUDENT_FL.SSR_CLSRCH_MAIN_FL.GBL' };
+const SETTINGS_SENDER = { id: EXTENSION_ID, url: `chrome-extension://${EXTENSION_ID}/options/options.html` };
 
 function startBackground({ config = {}, candidates, failRmp = false, failCg = false, firefox = false } = {}) {
   const calls = [], session = {}, errors = [];
-  let listener;
+  let listener, installListener;
   const settings = { ...config };
   const api = {
     storage: {
       sync: { get: async () => ({ ...settings }), set: async value => Object.assign(settings, value) },
       session: { get: async key => ({ [key]:session[key] }), set: async value => Object.assign(session, value), clear: async () => { for (const k of Object.keys(session)) delete session[k]; } }
     },
-    runtime: { onInstalled: { addListener() {} }, onMessage: { addListener(fn) { listener = fn; } } }
+    runtime: {
+      id: EXTENSION_ID,
+      getURL: path => `chrome-extension://${EXTENSION_ID}/${path}`,
+      onInstalled: { addListener(fn) { installListener = fn; } },
+      onMessage: { addListener(fn) { listener = fn; } }
+    }
   };
   const context = vm.createContext({
     [firefox ? 'browser' : 'chrome']: api,
@@ -31,10 +40,12 @@ function startBackground({ config = {}, candidates, failRmp = false, failCg = fa
     }
   });
   vm.runInContext(configSource, context);
+  vm.runInContext(campusesSource, context);
   vm.runInContext(source, context);
   return { calls, session, errors, settings,
-    send: (type, payload) => new Promise(resolve => {
-      const keepAlive = listener({ type,payload }, {}, resolve);
+    install: () => installListener({ reason: 'update' }),
+    send: (type, payload, sender = type === 'CLEAR_CACHE' ? SETTINGS_SENDER : UH_SENDER) => new Promise(resolve => {
+      const keepAlive = listener({ type,payload }, sender, resolve);
       assert.equal(keepAlive, true);
     })
   };
@@ -110,4 +121,46 @@ test('placeholder words inside a surname are preserved while actual placeholders
   const reply = await b.send('LOOKUP_PROFESSOR',{professorName:'Staff'});
   assert.equal(reply.result,null);
   assert.equal(b.calls.length,count);
+});
+
+test('lookups from a page that is not a supported campus are rejected before any request', async () => {
+  const b = startBackground();
+  for (const url of ['https://example.edu/search', 'http://saprd.my.uh.edu/psc', 'not a url']) {
+    const professorReply = await b.send('LOOKUP_PROFESSOR', professor, { id: EXTENSION_ID, url });
+    const courseReply = await b.send('LOOKUP_COURSE', { courseCode: 'COSC 1336' }, { id: EXTENSION_ID, url });
+    assert.equal(professorReply.ok, false);
+    assert.equal(courseReply.ok, false);
+  }
+  assert.equal(b.calls.length, 0);
+});
+test('messages from another extension or a web page are rejected', async () => {
+  const b = startBackground();
+  for (const sender of [{ ...UH_SENDER, id: 'someone-else' }, { url: UH_SENDER.url }, null]) {
+    const reply = await b.send('LOOKUP_PROFESSOR', professor, sender);
+    assert.equal(reply.ok, false);
+  }
+  assert.equal(b.calls.length, 0);
+});
+test('a campus turned off in settings gets no lookups', async () => {
+  const b = startBackground({ config: { campuses: { uh: { enabled: false } } } });
+  const reply = await b.send('LOOKUP_PROFESSOR', professor);
+  assert.equal(reply.ok, false);
+  assert.match(reply.error, /turned off/);
+  assert.equal(b.calls.length, 0);
+});
+test('lookups use the frame URL and fall back to the tab URL', async () => {
+  const b = startBackground();
+  const reply = await b.send('LOOKUP_COURSE', { courseCode: 'COSC 1336' }, { id: EXTENSION_ID, tab: { url: UH_SENDER.url } });
+  assert.equal(reply.ok, true);
+  assert.equal(b.calls.length, 1);
+});
+test('the cache can only be cleared from extension pages', async () => {
+  const b = startBackground();
+  await b.send('LOOKUP_COURSE', { courseCode: 'COSC 1336' });
+  const fromPortal = await b.send('CLEAR_CACHE', undefined, UH_SENDER);
+  assert.equal(fromPortal.ok, false);
+  assert.equal(Object.keys(b.session).length, 1);
+  const fromSettings = await b.send('CLEAR_CACHE');
+  assert.equal(fromSettings.ok, true);
+  assert.equal(Object.keys(b.session).length, 0);
 });

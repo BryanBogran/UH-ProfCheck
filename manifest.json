@@ -10,11 +10,13 @@
     "128": "icons/icon-128.png"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "https://api.cougargrades.io/*"
   ],
+  "optional_host_permissions": [],
   "background": {
     "service_worker": "src/background.js"
   },
@@ -42,6 +44,9 @@
         "src/config.js",
         "src/parse.js",
         "src/scoring.js",
+        "src/campuses.js",
+        "src/adapters/registry.js",
+        "src/adapters/uh.js",
         "src/content.js",
         "src/launcher.js"
       ],

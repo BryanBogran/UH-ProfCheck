@@ -1,0 +1,59 @@
+name: Test report
+description: Report the results of testing a release-candidate build on your live portal.
+title: "Test report: <campus> <version>"
+labels: ["test-report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Test the exact release-candidate build Bryan posted. Load it unpacked in Chrome.
+        Screenshots are allowed only if they're cropped to the results table and every student name, ID, and schedule detail is blacked out. Written results are preferred.
+  - type: input
+    id: campus
+    attributes:
+      label: Campus
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build commit
+      description: The commit ID shown on the release-candidate GitHub Release.
+      placeholder: 1a2b3c4
+    validations:
+      required: true
+  - type: input
+    id: chrome
+    attributes:
+      label: Chrome version
+      description: From chrome://version
+      placeholder: "142.0.7444.59"
+    validations:
+      required: true
+  - type: checkboxes
+    id: passed
+    attributes:
+      label: Scenarios that passed
+      description: Tick each scenario that worked. Explain any you didn't tick in the notes.
+      options:
+        - label: Search results show overlays with the right course codes and instructors
+        - label: A refresh or new search that replaces the results updates the overlays
+        - label: Navigating away and back shows the overlays again
+        - label: A section with no instructor assigned shows as unassigned
+        - label: A full or waitlisted section shows the right seat notice
+        - label: Turning the campus off and reloading shows no overlays
+        - label: Denying access when turning the campus on leaves it off
+  - type: dropdown
+    id: result
+    attributes:
+      label: Overall result
+      options:
+        - Pass
+        - Fail
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: What failed, what you expected, and the steps to reproduce it.
